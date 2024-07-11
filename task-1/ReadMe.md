@@ -10,6 +10,8 @@ high performance gemm implementation on Nvidia A100
 
 
 # Usage
+- fork one copy to your own github 
+![image](https://github.com/PJLAB-CHIP/playground/assets/9277155/ebcbfe5b-f4a4-4a20-bc33-9f0f747fcd16)
 
 - start a docker image
   
@@ -18,7 +20,7 @@ high performance gemm implementation on Nvidia A100
   # yourport: e.g. 21234
   docker run --gpus all --name your_docker_name -v /yourpath:/code -v /nvme/model_hub:/root/model_hub -it -p yourport:22 --entrypoint /bin/bash torch-xla:r2.1.0-cuda12.1-cudnn8.9.6-playground  
   cd /code
-  git clone https://github.com/PJLAB-CHIP/playground.git
+  git clone https://github.com/your_github_account/playground.git
   cd playground/task-1
   ```
 - revise *Makefile* to choose the **test precision** and **version of matrix multiplication**:
