@@ -11,8 +11,7 @@ high performance gemm implementation on Nvidia A100
 
 # Usage
 - fork one copy to your own github 
-![image](https://github.com/PJLAB-CHIP/playground/assets/9277155/ebcbfe5b-f4a4-4a20-bc33-9f0f747fcd16)
-
+![image](https://github.com/PJLAB-CHIP/playground/assets/9277155/df90b9e6-84a1-4636-91af-d9ad1ad357cf)
 - start a docker image
   
   ```bash
