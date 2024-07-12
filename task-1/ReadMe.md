@@ -16,9 +16,9 @@ high performance gemm implementation on Nvidia A100
 - start a docker image
   
   ```bash
-  # image: torch-xla:r2.1.0-cuda12.1-cudnn8.9.6-playground
+  # image: torch-xla:r2.1.0-cuda12.1-cudnn8.9.6-playground-new
   # yourport: e.g. 21234
-  docker run --gpus all --name your_docker_name -v /yourpath:/code -v /nvme/model_hub:/root/model_hub -it -p yourport:22 --entrypoint /bin/bash torch-xla:r2.1.0-cuda12.1-cudnn8.9.6-playground  
+  docker run --gpus all --name your_docker_name -v /yourpath:/code -v /nvme/model_hub:/root/model_hub -it -p yourport:22 --entrypoint /bin/bash torch-xla:r2.1.0-cuda12.1-cudnn8.9.6-playground-new  
   cd /code
   git clone https://github.com/your_github_account/playground.git
   cd playground/task-1
@@ -47,7 +47,8 @@ make run
   ```bash
   python benchmark_cublas_use_torch.py
   ```
-  ![image](https://github.com/PJLAB-CHIP/playground/assets/9277155/e6ef26aa-5ffc-4df5-9a74-942e3425db19)
+  ![image](https://github.com/user-attachments/assets/3cc88c2c-3851-416f-855c-7690f647cc00)
+
 
 # Example final results
 
