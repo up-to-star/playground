@@ -1,11 +1,11 @@
 # Minimum required CMake version
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.30)
 
 # Project Name
 project(Playground-Task1)
 
 # Compiler Configurations
-include(${CMAKE_CURRENT_SOURCE_DIR}/Compiler.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Compiler.cmake)
 
 # Set the Target Name and Add Executable
 set(TARGET_NAME task1)
@@ -18,16 +18,16 @@ target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/in
 target_compile_options(${TARGET_NAME} PRIVATE -save-temps)
 
 # Define Macros for compiling the target
-include(${CMAKE_CURRENT_SOURCE_DIR}/Macros.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Macros.cmake)
 
 # Include and Link to Libraries
-include(${CMAKE_CURRENT_SOURCE_DIR}/Libraries.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Libraries.cmake)
 
 # Set Binary Output Path
 if(NOT DEFINED TARGET_BIN_OUTPUT_DIR)
     set(TARGET_BIN_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
-set(TARGET_BIN_OUTPUT_NAME "${TARGET_NAME}_${TEST_DATA_TYPE}_v${TEST_KERNEL_VERSION}.exe")
+set(TARGET_BIN_OUTPUT_NAME "${TARGET_NAME}_${TEST_DATA_TYPE}_v${TEST_KERNEL_VERSION}")
 set_target_properties(
     ${TARGET_NAME} PROPERTIES 
     RUNTIME_OUTPUT_DIRECTORY 

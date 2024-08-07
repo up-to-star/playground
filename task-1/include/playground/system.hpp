@@ -1,23 +1,24 @@
 #pragma once
 
-#ifdef _MSC_VER
-// Inline
-#define PJ_INLINE inline
-// Force Inline
-#define PJ_FINLINE __forceinline
-// No Inline
-#define PJ_NOINLINE __declspec(noinline)
-#else
-// Inline
-#define PJ_INLINE inline
-// Force Inline
-#define PJ_FINLINE inline __attribute__((always_inline))
-// No Inline
-#define PJ_NOINLINE __attribute__((noinline))
-#endif
-
-#include <cuda_fp16.h>
+#include <cstddef>
 #include <cstdint>
+#include <cuda_fp16.h>
+
+#ifdef _MSC_VER
+    // Inline
+    #define PJ_INLINE inline
+    // Force Inline
+    #define PJ_FINLINE __forceinline
+    // No Inline
+    #define PJ_NOINLINE __declspec(noinline)
+#else
+    // Inline
+    #define PJ_INLINE inline
+    // Force Inline
+    #define PJ_FINLINE inline __attribute__((always_inline))
+    // No Inline
+    #define PJ_NOINLINE __attribute__((noinline))
+#endif
 
 namespace playground
 {

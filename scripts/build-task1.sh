@@ -2,17 +2,24 @@
 export CC="/usr/bin/gcc"
 export CXX="/usr/bin/g++"
 export CUDA_CC="/usr/bin/gcc"
-export CUDA_HOME="/usr/local/cuda"
+export CUDA_HOME="/usr/local/cuda-12.1"
+
+PROJ_HOME=$(pwd)
+TaskNo="1"
 
 BuildType="Release"
 CleanFirst="false"
 CleanAll="false"
 TestKernelVersion="0"
 TestDataType="float32"
+Prefix="$PROJ_HOME/bin/task-1"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
+        --prefix=*)
+            Prefix="${1#*=}"
+            ;;
         Release|Debug)
             BuildType=$1
             ;;
@@ -35,7 +42,7 @@ while [[ $# -gt 0 ]]; do
             TestDataType="float16"
             ;;
         --help)
-            cat ./docs/help-build.txt
+            cat ./scripts/build-task1-help.txt
             exit 1
             ;;
         *)
@@ -46,7 +53,6 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-PROJ_HOME=$(pwd)
 
 if [ "$CleanAll" = "true" ] && [ -d "$PROJ_HOME/build" ]; then
     echo "Cleaning all build files..."
@@ -59,9 +65,12 @@ fi
 
 cd $PROJ_HOME/build
 cmake ..  \
+    -G "Ninja" \
+    -DTASK_NO=$TaskNo \
+    -DTARGET_BIN_OUTPUT_DIR=$Prefix \
     -DCMAKE_BUILD_TYPE=$BuildType \
     -DTEST_KERNEL_VERSION=$TestKernelVersion \
-    -DTEST_DATA_TYPE=$TestDataType 
+    -DTEST_DATA_TYPE=$TestDataType
 
 if [ "$CleanFirst" = "true" ]; then
     cmake --build . --parallel $(nproc) --clean-first

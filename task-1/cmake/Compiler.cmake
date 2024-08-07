@@ -3,10 +3,15 @@
 # @note $ENV{CUDA_CC} must be the path to a C compiler which is compatible with NVCC.
 # ==================================================================================================
 
+# Generate compile commands for clangd
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+
+set(CMAKE_CUDA_ARCHITECTURES 80)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(/permissive- /Zc:forScope /openmp)

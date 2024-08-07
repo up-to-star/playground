@@ -1,5 +1,7 @@
 #include <cublas_v2.h>
 
+#include "playground/system.hpp"
+
 namespace playground
 {
 
