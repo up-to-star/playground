@@ -42,7 +42,7 @@ while [[ $# -gt 0 ]]; do
             TestDataType="float16"
             ;;
         --help)
-            cat ./scripts/build-task1-help.txt
+            cat ./docs/scripts/build-task1-help.txt
             exit 1
             ;;
         *)
