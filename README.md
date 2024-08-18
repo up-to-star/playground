@@ -8,7 +8,7 @@ Fork this repository to your own github account:
 
 ![image](./docs/imgs/fork.png)
 
-Start a docker from image `playground:latest`:
+Start a docker from image `playground:v1.0-cuda12.2-cudnn8-ubuntu22`:
 
 ```bash
 # Params:
@@ -23,7 +23,7 @@ docker run --gpus all --name <container-name> -it \
     -v /dev:/dev \
     -v /var/lock:/var/lock \
     -v /var/log:/var/log \
-    -v $HOME/<project-home>:/root/<project-home>  \
+    -v ~/<project-home>:/root/<project-home>  \
     -e HTTP_PROXY=<proxy-addr>  \
     -e HTTPS_PROXY=<proxy-addr>  \
     -e http_proxy=<proxy-addr>  \
@@ -36,6 +36,13 @@ After you are inside the docker, clone this repo:
 ```bash
 cd /root/<project-home>
 git clone https://github.com/<your-github-account-name>/playground.git
+```
+
+Remember to change your git config:
+
+```bash
+git config --global user.name "<your-name>"
+git config --global user.email "<your-email>"
 ```
 
 ## 2. Tasks
