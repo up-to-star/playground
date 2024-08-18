@@ -5,5 +5,5 @@
 *.cubin
 *.fatbin
 
-bin/*
+bin
 build/*

@@ -1,7 +1,7 @@
 CompileFlags:
   Add: 
-    - --cuda-gpu-arch=sm_86
-    - -Wno-drv_omp_offload_target_missingbcruntime  # Bug: Can't suppress this warning for clangd
+    - --cuda-gpu-arch=sm_86  # A100
+    - -Wno-drv_omp_offload_target_missingbcruntime
   Remove:
     - -ccbin
     - -forward-unknown-to-host-compiler
@@ -11,7 +11,6 @@ CompileFlags:
 
 Diagnostics:
   UnusedIncludes: None
-  MissingIncludes: Strict
 
   ClangTidy:
     Add: [

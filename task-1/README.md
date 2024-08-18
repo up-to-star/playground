@@ -2,12 +2,11 @@
 
 High performance gemm implementation on Nvidia A100.
 
-## 1. Target
+## 1. 🎯Target
 
 Implement a high performance gemm (General Matrix Multiply) function with CUDA on Nvidia A100 for float32 and float16 data types.
 
 The implementation should be able to achieve at least 90% of the performance of cuBLAS, with the given benchmarking structure.
-
 
 ## 2. Benchmark cBlas and cuBlas
 
@@ -22,7 +21,12 @@ bash scripts/build-task1.sh -v1 -f32
 bash scripts/build-task1.sh -v1 -f16
 ```
 
-Run the executables in "[./bin](../bin)" directory to get the benchmark results.
+> 💡**Note**:  
+> It is suggested to restart clangd server after building (to avoid some code check errors).  
+> To restart clangd server, press `Ctrl+Shift+P` in VSCode, and select `clangd: Restart language server`.  
+> ![restart-clangd](../docs/imgs/restart-clangd.png)
+
+Run the executables in "[./task-1/bin](./bin)" directory to get the benchmark results.
 
 ## 4. Add Your Own Implementation
 
@@ -37,7 +41,7 @@ void matmul<float16_t, 2>(const size_t m, const size_t n, const size_t k, const 
 
 Then create a `.cu` file in "[./src](./src)" directory with any name you like, and implement the function `matmul` with the signature you just declared.
 
-For example, add following lines in "./src/matmul_f16/v2.cu" to implement the function `matmul<float16_t, 2>`:
+For example, add following lines in "./src/matmul_f16/v2.cu" to provide the defination for function `matmul<float16_t, 2>`:
 
 ```cpp
 #include "playground/matmul.hpp"
@@ -54,5 +58,6 @@ void matmul<float16_t, 2>(const size_t m, const size_t n, const size_t k, const 
 Now you can build an executable to test your implementation with following command:
 
 ```bash
+# Build the test binary with DType=float16 and Version=2:
 bash scripts/build.sh -v2 -f16
 ```

@@ -13,14 +13,14 @@ set_target_properties(
     CUDA_SEPARABLE_COMPILATION ON
     CUDA_ARCHITECTURES "80"  # A100
 )
-target_include_directories(${TARGET_NAME} PRIVATE $ENV{CUDA_HOME}/include)
+target_include_directories(${TARGET_NAME} PRIVATE $ENV{CUDA_DIR}/include)
 target_link_libraries(${TARGET_NAME} PRIVATE cuda)
 
-message(STATUS "CUDA_HOME: $ENV{CUDA_HOME}")
+message(STATUS "CUDA_DIR: $ENV{CUDA_DIR}")
 
 # cuBLAS
-link_directories(${TARGET_NAME} PRIVATE $ENV{CUDA_HOME}/lib64)
-find_library(CUBLAS_LIBRARY cublas HINTS $ENV{CUDA_HOME}/lib64 REQUIRED)
+link_directories(${TARGET_NAME} PRIVATE $ENV{CUDA_DIR}/lib64)
+find_library(CUBLAS_LIBRARY cublas HINTS $ENV{CUDA_DIR}/lib64 REQUIRED)
 target_link_libraries(${TARGET_NAME} PRIVATE ${CUBLAS_LIBRARY})
 
 # cBLAS

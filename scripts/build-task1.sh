@@ -1,8 +1,9 @@
 #!/bin/bash
-export CC="/usr/bin/gcc"
-export CXX="/usr/bin/g++"
-export CUDA_CC="/usr/bin/gcc"
-export CUDA_HOME="/usr/local/cuda-12.1"
+echo "[@~@] Build Start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+export CC="clang"
+export CXX="clang++"
+export CUDA_CC="clang"
+export CUDA_DIR="/usr/local/cuda"
 
 PROJ_HOME=$(pwd)
 TaskNo="1"
@@ -12,14 +13,10 @@ CleanFirst="false"
 CleanAll="false"
 TestKernelVersion="0"
 TestDataType="float32"
-Prefix="$PROJ_HOME/bin/task-1"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --prefix=*)
-            Prefix="${1#*=}"
-            ;;
         Release|Debug)
             BuildType=$1
             ;;
@@ -59,24 +56,16 @@ if [ "$CleanAll" = "true" ] && [ -d "$PROJ_HOME/build" ]; then
     rm -rf $PROJ_HOME/build
 fi
 
-if [ ! -d "$PROJ_HOME/build" ]; then
-    mkdir $PROJ_HOME/build
-fi
-
-cd $PROJ_HOME/build
-cmake ..  \
-    -G "Ninja" \
+cmake -S . -B ./build -G "Ninja" \
     -DTASK_NO=$TaskNo \
-    -DTARGET_BIN_OUTPUT_DIR=$Prefix \
     -DCMAKE_BUILD_TYPE=$BuildType \
     -DTEST_KERNEL_VERSION=$TestKernelVersion \
     -DTEST_DATA_TYPE=$TestDataType
 
 if [ "$CleanFirst" = "true" ]; then
-    cmake --build . --parallel $(nproc) --clean-first
+    cmake --build ./build --parallel $(nproc) --clean-first
 else
-    cmake --build . --parallel $(nproc)
+    cmake --build ./build --parallel $(nproc)
 fi
 
-cd $PROJ_HOME
-echo "Build finished."
+echo "[@v@] Build Finished <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
