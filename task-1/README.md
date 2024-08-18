@@ -28,15 +28,14 @@ bash scripts/build-task1.sh -v1 -f16
 
 Run the executables in "[./task-1/bin](./bin)" directory to get the benchmark results.
 
-## 4. Add Your Own Implementation
+## 3. Add Your Own Implementation
 
 Go to "[./task-1/include/playground/matmul.hpp](./include/playground/matmul.hpp)", add a new declaration of function `matmul` inside namespace `playground`.
 
-For example, if you want to implement a new `matmul` with `DType=float16` and `Version=2`, you can add the following lines to the file:
+For example, if you want to implement a new `matmul` with `DType=float16` and `Version=2`, you can use `MATMUL` macro to add one line int the file:
 
 ```cpp
-template <>
-void matmul<float16_t, 2>(const size_t m, const size_t n, const size_t k, const float16_t* const A, const float16_t* const B, float16_t* const C);
+MATMUL(float16_t, 2)
 ```
 
 Then create a `.cu` file in "[./src](./src)" directory with any name you like, and implement the function `matmul` with the signature you just declared.

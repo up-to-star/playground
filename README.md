@@ -16,13 +16,10 @@ Start a docker from image `playground:v1.0-cuda12.2-cudnn8-ubuntu22`:
 #   <container-port>: A port that nobody has used. For example: 1145.
 #   <project-home>: A directory that stores all your projects. This directory should be shared by all containers.
 #   <proxy-addr>: Your proxy address.
+#   --cap-add=SYS_ADMIN: This is required for using Nsight Compute to profiling in docker.
 docker run --gpus all --name <container-name> -it \
     -p <container-port>:22 --entrypoint /bin/bash \
-    -v /proc:/proc \
-    -v /sys:/sys \
-    -v /dev:/dev \
-    -v /var/lock:/var/lock \
-    -v /var/log:/var/log \
+    --cap-add=SYS_ADMIN \
     -v ~/<project-home>:/root/<project-home>  \
     -e HTTP_PROXY=<proxy-addr>  \
     -e HTTPS_PROXY=<proxy-addr>  \
