@@ -22,7 +22,7 @@ bash scripts/build-task1.sh -v1 -f16
 ```
 
 > 💡**Note**:  
-> It is suggested to restart clangd server after building (to avoid some code check errors).  
+> It is suggested to restart clangd server after building (to avoid some code analysis errors).  
 > To restart clangd server, press `Ctrl+Shift+P` in VSCode, and select `clangd: Restart language server`.  
 > ![restart-clangd](../docs/imgs/restart-clangd.png)
 
@@ -32,22 +32,33 @@ Run the executables in "[./task-1/bin](./bin)" directory to get the benchmark re
 
 Go to "[./task-1/include/playground/matmul.hpp](./include/playground/matmul.hpp)", and add a new declaration of function `matmul` inside namespace `playground`.
 
-For example, if you want to implement a new `matmul` with `DType=float16` and `Version=2`, you can use `MATMUL` macro to add one line in the file:
+For example, to implement a new `matmul` function with `DType=float16` and `Version=2`, you can add a new line in the file with `PG_MATMUL_SIG` (playground matmul function signature) macro:
 
 ```cpp
-MATMUL(float16_t, 2)
+// @file: ./task-1/include/playground/matmul.hpp
+
+// namespace playground {
+// ...
+
+// Create a new declaration for matmul function with DType=float16_t and Version=2
+PG_MATMUL_SIG(float16_t, 2, A, B, C, M, N, K);
+
+// ...
+// } // namespace playground
 ```
 
 Then create a `.cu` file in "[./src](./src)" directory with any name you like, and implement the function `matmul` with the signature you just declared.
 
-For example, add following lines in "./src/matmul_f16/v2.cu" to provide the definition for function `matmul<float16_t, 2>`:
+For example, add following lines in "./src/pjlab/bigchip/f16-v2.cu" to provide the definition for function `matmul<float16_t, 2>`:
 
 ```cpp
+// @file: ./task-1/src/pjlab/bigchip/f16-v2.cu
+
 #include "playground/matmul.hpp"
 
 namespace playground {
-template <>
-void matmul<float16_t, 2>(const size_t m, const size_t n, const size_t k, const float16_t* const A, const float16_t* const B, float16_t* const C)
+// Implement the matmul function with DType=float16_t and Version=2
+PG_MATMUL_SIG(float16_t, 2, A, B, C, M, N, K)
 {
     // ......
 }
@@ -60,6 +71,7 @@ Now you can build an executable to test your implementation with the following c
 # Build the test binary with DType=float16 and Version=2:
 bash scripts/build.sh -v2 -f16
 ```
+
 ## 4.Example final results
 
 ### CUDA Core(FP32)
@@ -76,10 +88,10 @@ bash scripts/build.sh -v2 -f16
 | TFLOPS | 18.09 | 53.05 |103.05 |159.35 | 213.12 |222.11 | 312 |
 
 > 💡**Note**:  
-> some card can reach above 250 TFLOPS using cuBLAS fp16. The target is the 90% of cuBLAS on the same card
+> Some card can reach above 250 TFLOPS using cuBLAS fp16. The target is the 90% of cuBLAS on the same card
 
 ## 5. References
-see also: [feishu doc: cuda学习资料](https://aicarrier.feishu.cn/wiki/SFdnw61vHi1AfRkeJVecgMjBnrc)
+See also: [feishu doc: cuda学习资料](https://aicarrier.feishu.cn/wiki/SFdnw61vHi1AfRkeJVecgMjBnrc)
 
 ### CUDA Core
 

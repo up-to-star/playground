@@ -8,7 +8,7 @@
 
 namespace playground
 {
-PG_MATMUL(float16_t, MatmulcuBlasVersion, M, N, K, A, B, C)
+PG_MATMUL_SIG(float16_t, MatmulcuBlasVersion, M, N, K, A, B, C)
 {
     const float16_t Alpha = 1.0f;
     const float16_t Beta = 0.0f;

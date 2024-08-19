@@ -28,7 +28,7 @@ docker run --gpus all --name <container-name> -it \
     playground:v1.0-cuda12.2-cudnn8-ubuntu22
 ```
 
-After you are inside the docker, clone this repo:
+Inside the container, clone the repo you forked:
 
 ```bash
 cd /root/<project-home>

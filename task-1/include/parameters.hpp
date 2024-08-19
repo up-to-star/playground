@@ -9,10 +9,8 @@ namespace params
 {
 
 // =============================================================================
-// @Note
-//   `DataType` and `gemmVersion` are managed by CMake automatically.
+// @Note `DataType` and `MatmulVersion` are managed by CMake automatically.
 // -----------------------------------------------------------------------------
-// This is managed automatically by CMake.
 #ifdef TEST_FLOAT16
 using DataType = playground::float16_t;
 constexpr std::string_view DataTypeName = "f16";
@@ -20,7 +18,6 @@ constexpr std::string_view DataTypeName = "f16";
 using DataType = playground::float32_t;
 constexpr std::string_view DataTypeName = "f32";
 #endif
-// This is managed automatically by CMake.
 #ifndef TEST_KERNEL_VERSION
     #define TEST_KERNEL_VERSION playground::MatmulcBlasVersion
 #endif
@@ -36,8 +33,5 @@ constexpr playground::size_t NumRep = 100;
 
 // Warmup Times
 constexpr playground::size_t NumWarmup = 10;
-
-// Range of Elements in the Matrices
-constexpr playground::size_t ElemMin = 0, ElemMax = 1;
 
 }  // namespace params

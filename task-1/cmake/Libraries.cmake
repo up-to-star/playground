@@ -16,8 +16,6 @@ set_target_properties(
 target_include_directories(${TARGET_NAME} PRIVATE $ENV{CUDA_DIR}/include)
 target_link_libraries(${TARGET_NAME} PRIVATE cuda)
 
-message(STATUS "CUDA_DIR: $ENV{CUDA_DIR}")
-
 # cuBLAS
 link_directories(${TARGET_NAME} PRIVATE $ENV{CUDA_DIR}/lib64)
 find_library(CUBLAS_LIBRARY cublas HINTS $ENV{CUDA_DIR}/lib64 REQUIRED)

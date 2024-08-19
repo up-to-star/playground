@@ -13,8 +13,8 @@ void matmul(const size_t M, const size_t N, const size_t K,
 constexpr uint8_t MatmulcBlasVersion = 0;
 constexpr uint8_t MatmulcuBlasVersion = 1;
 
-// Playground matmul signature.
-#define PG_MATMUL(DType, Version, M, N, K, A, B, C)                    \
+// Playground Matmul Signature.
+#define PG_MATMUL_SIG(DType, Version, M, N, K, A, B, C)                        \
     template <>                                                                \
     void matmul<DType, Version>(const size_t M, const size_t N,                \
                                 const size_t K, const DType* const A,          \
@@ -24,29 +24,28 @@ constexpr uint8_t MatmulcuBlasVersion = 1;
 // Declaration of library matmul functions.
 // -----------------------------------------------------------------------------
 /**
- * @brief Matrix multiplication, fp16, cBLAS.
+ * @brief Matrix multiplication, fp16-v0, cBLAS.
  */
-PG_MATMUL(float16_t, MatmulcBlasVersion, M, N, K, A, B, C);
+PG_MATMUL_SIG(float16_t, MatmulcBlasVersion, M, N, K, A, B, C);
 
 /**
- * @brief Matrix multiplication, fp32, cBLAS.
+ * @brief Matrix multiplication, fp32-v0, cBLAS.
  */
-PG_MATMUL(float32_t, MatmulcBlasVersion, M, N, K, A, B, C);
+PG_MATMUL_SIG(float32_t, MatmulcBlasVersion, M, N, K, A, B, C);
 
 /**
- * @brief Matrix multiplication, fp16, cuBLAS.
+ * @brief Matrix multiplication, fp16-v1, cuBLAS.
  */
-PG_MATMUL(float16_t, MatmulcuBlasVersion, M, N, K, A, B, C);
+PG_MATMUL_SIG(float16_t, MatmulcuBlasVersion, M, N, K, A, B, C);
 
 /**
- * @brief Matrix multiplication, fp32, cuBLAS.
+ * @brief Matrix multiplication, fp32-v1, cuBLAS.
  */
-PG_MATMUL(float32_t, MatmulcuBlasVersion, M, N, K, A, B, C);
+PG_MATMUL_SIG(float32_t, MatmulcuBlasVersion, M, N, K, A, B, C);
 
 // =============================================================================
 // Declaration of self-implemented matmul functions.
-// e.g. PG_MATMUL(float16_t, 2)
-//      PG_MATMUL(float32_t, 2)
+// e.g. PG_MATMUL(float16_t, 2, M, N, K, A, B, C);
 // -----------------------------------------------------------------------------
 
 // ...

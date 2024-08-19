@@ -1,8 +1,7 @@
 #!/bin/bash
-echo  -e "\e[1;32m[@~@] Build Start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\e[0m"
-export CC="clang"
-export CXX="clang++"
-export CUDA_CC="clang"
+export CC="gcc"
+export CXX="g++"
+export CUDA_CC="gcc"
 export CUDA_DIR="/usr/local/cuda"
 
 PROJ_HOME=$(pwd)
@@ -50,6 +49,7 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
+echo  -e "\e[1;32m[@~@] Build Start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\e[0m"
 
 if [ "$CleanAll" = "true" ] && [ -d "$PROJ_HOME/build" ]; then
     echo "Cleaning all build files..."
