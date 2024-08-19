@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "[@~@] Build Start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+echo  -e "\e[1;32m[@~@] Build Start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\e[0m"
 export CC="clang"
 export CXX="clang++"
 export CUDA_CC="clang"
@@ -68,4 +68,4 @@ else
     cmake --build ./build --parallel $(nproc)
 fi
 
-echo "[@v@] Build Finished <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+echo -e "\e[1;32m[@v@] Build Finished <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\e[0m"

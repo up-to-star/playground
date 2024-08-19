@@ -7,9 +7,7 @@
 
 namespace playground
 {
-template <>
-void matmul<float32_t, 1>(const size_t M, const size_t N, const size_t K, const float32_t* const A,
-                          const float32_t* const B, float32_t* const C)
+PG_MATMUL(float32_t, MatmulcuBlasVersion, M, N, K, A, B, C)
 {
     const float32_t Alpha = 1.0f;
     const float32_t Beta = 0.0f;

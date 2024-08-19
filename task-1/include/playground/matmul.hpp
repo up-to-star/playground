@@ -10,14 +10,15 @@ void matmul(const size_t M, const size_t N, const size_t K,
             const DType* const A, const DType* const B,
             DType* const C) = delete;
 
-#define cBLAS_VERSION 0
-#define cuBLAS_VERSION 1
+constexpr uint8_t MatmulcBlasVersion = 0;
+constexpr uint8_t MatmulcuBlasVersion = 1;
 
-#define MATMUL(DType, Version)                                                 \
+// Playground matmul signature.
+#define PG_MATMUL(DType, Version, M, N, K, A, B, C)                    \
     template <>                                                                \
     void matmul<DType, Version>(const size_t M, const size_t N,                \
                                 const size_t K, const DType* const A,          \
-                                const DType* const B, DType* const C);         \
+                                const DType* const B, DType* const C)
 
 // =============================================================================
 // Declaration of library matmul functions.
@@ -25,27 +26,27 @@ void matmul(const size_t M, const size_t N, const size_t K,
 /**
  * @brief Matrix multiplication, fp16, cBLAS.
  */
-MATMUL(float16_t, cBLAS_VERSION)
+PG_MATMUL(float16_t, MatmulcBlasVersion, M, N, K, A, B, C);
 
 /**
  * @brief Matrix multiplication, fp32, cBLAS.
  */
-MATMUL(float32_t, cBLAS_VERSION)
+PG_MATMUL(float32_t, MatmulcBlasVersion, M, N, K, A, B, C);
 
 /**
  * @brief Matrix multiplication, fp16, cuBLAS.
  */
-MATMUL(float16_t, cuBLAS_VERSION)
+PG_MATMUL(float16_t, MatmulcuBlasVersion, M, N, K, A, B, C);
 
 /**
  * @brief Matrix multiplication, fp32, cuBLAS.
  */
-MATMUL(float32_t, cuBLAS_VERSION)
+PG_MATMUL(float32_t, MatmulcuBlasVersion, M, N, K, A, B, C);
 
 // =============================================================================
 // Declaration of self-implemented matmul functions.
-// e.g. MATMUL(float16_t, 2)
-//      MATMUL(float32_t, 2)
+// e.g. PG_MATMUL(float16_t, 2)
+//      PG_MATMUL(float32_t, 2)
 // -----------------------------------------------------------------------------
 
 // ...
