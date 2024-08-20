@@ -10,8 +10,8 @@ void matmul(const size_t M, const size_t N, const size_t K,
             const DType* const A, const DType* const B,
             DType* const C) = delete;
 
-constexpr uint8_t MatmulcBlasVersion = 0;
-constexpr uint8_t MatmulcuBlasVersion = 1;
+constexpr uint8_t CBLAS_VER = 0;
+constexpr uint8_t CUBLAS_VER = 1;
 
 // Playground Matmul Signature.
 #define PG_MATMUL_SIG(DType, Version, M, N, K, A, B, C)                        \
@@ -26,26 +26,26 @@ constexpr uint8_t MatmulcuBlasVersion = 1;
 /**
  * @brief Matrix multiplication, fp16-v0, cBLAS.
  */
-PG_MATMUL_SIG(float16_t, MatmulcBlasVersion, M, N, K, A, B, C);
+PG_MATMUL_SIG(float16_t, CBLAS_VER, M, N, K, A, B, C);
 
 /**
  * @brief Matrix multiplication, fp32-v0, cBLAS.
  */
-PG_MATMUL_SIG(float32_t, MatmulcBlasVersion, M, N, K, A, B, C);
+PG_MATMUL_SIG(float32_t, CBLAS_VER, M, N, K, A, B, C);
 
 /**
  * @brief Matrix multiplication, fp16-v1, cuBLAS.
  */
-PG_MATMUL_SIG(float16_t, MatmulcuBlasVersion, M, N, K, A, B, C);
+PG_MATMUL_SIG(float16_t, CUBLAS_VER, M, N, K, A, B, C);
 
 /**
  * @brief Matrix multiplication, fp32-v1, cuBLAS.
  */
-PG_MATMUL_SIG(float32_t, MatmulcuBlasVersion, M, N, K, A, B, C);
+PG_MATMUL_SIG(float32_t, CUBLAS_VER, M, N, K, A, B, C);
 
 // =============================================================================
 // Declaration of self-implemented matmul functions.
-// e.g. PG_MATMUL(float16_t, 2, M, N, K, A, B, C);
+// e.g. PG_MATMUL_SIG(float16_t, 2, M, N, K, A, B, C);
 // -----------------------------------------------------------------------------
 
 // ...
