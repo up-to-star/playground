@@ -8,10 +8,7 @@
 
 namespace playground
 {
-template <>
-void matmul<float16_t, 1>(const size_t M, const size_t N, const size_t K,
-                          const float16_t* const A, const float16_t* const B,
-                          float16_t* const C)
+PG_MATMUL_SIG(float16_t, CUBLAS_VERSION, M, N, K, A, B, C)
 {
     const float16_t Alpha = 1.0f;
     const float16_t Beta = 0.0f;

@@ -9,22 +9,19 @@ namespace params
 {
 
 // =============================================================================
-// @Note
-//   `DataType` and `gemmVersion` are managed by CMake automatically.
+// @Note `DataType` and `MatmulVersion` are managed by CMake automatically.
 // -----------------------------------------------------------------------------
-// This is managed automatically by CMake.
 #ifdef TEST_FLOAT16
 using DataType = playground::float16_t;
-constexpr std::string_view DataTypeName = "fp16";
+constexpr std::string_view DataTypeName = "f16";
 #else
 using DataType = playground::float32_t;
-constexpr std::string_view DataTypeName = "fp32";
+constexpr std::string_view DataTypeName = "f32";
 #endif
-// This is managed automatically by CMake.
 #ifndef TEST_KERNEL_VERSION
-    #define TEST_KERNEL_VERSION 0
+    #define TEST_KERNEL_VERSION playground::MatmulcBlasVersion
 #endif
-constexpr auto GemmVersion = playground::uint8_t(TEST_KERNEL_VERSION);
+constexpr auto MatmulVersion = playground::uint8_t(TEST_KERNEL_VERSION);
 // -----------------------------------------------------------------------------
 
 // Size of Matrices
@@ -32,12 +29,9 @@ constexpr auto GemmVersion = playground::uint8_t(TEST_KERNEL_VERSION);
 constexpr playground::size_t M = 4096, N = 4096, K = 4096;
 
 // Repeated Times
-constexpr playground::size_t NRep = 100;
+constexpr playground::size_t NumRep = 100;
 
 // Warmup Times
-constexpr playground::size_t NWarmup = 10;
-
-// Range of Elements in the Matrices
-constexpr playground::size_t ElemMin = 0, ElemMax = 1;
+constexpr playground::size_t NumWarmup = 10;
 
 }  // namespace params

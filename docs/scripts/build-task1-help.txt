@@ -1,5 +1,5 @@
 
-Usage : bash scripts/build.sh [options]
+Usage : bash scripts/build-task1.sh [options]
 
 Options for controlling build process.
 ======================================

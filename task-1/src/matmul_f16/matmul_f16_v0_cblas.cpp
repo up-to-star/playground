@@ -8,10 +8,7 @@
 
 namespace playground
 {
-template <>
-void matmul<float16_t, 0>(const size_t M, const size_t N, const size_t K,
-                          const float16_t* const A, const float16_t* const B,
-                          float16_t* const C)
+PG_MATMUL_SIG(float16_t, CBLAS_VERSION, M, N, K, A, B, C)
 {
     std::vector<float32_t> Af32, Bf32, Cf32;
     // Convert float16_t to float32_t, storing in Af32, Bf32, Cf32

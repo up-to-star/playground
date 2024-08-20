@@ -44,24 +44,24 @@ int main()
 
     printf(
         "[Playgounrd] Start Testing for GEMM Version %d with DType %s ... \n",
-        params::GemmVersion, params::DataTypeName.data());
+        params::MatmulVersion, params::DataTypeName.data());
     // If not using cblas, execute the function multiple times to get average
     // runtime
-    if constexpr (params::GemmVersion != 0) {
-        for (auto i = 0ULL; i < params::NRep + params::NWarmup; ++i) {
+    if constexpr (params::MatmulVersion != playground::CBLAS_VERSION) {
+        for (auto i = 0ULL; i < params::NumRep + params::NumWarmup; ++i) {
             // Warm Up
-            if (i < params::NWarmup) {
+            if (i < params::NumWarmup) {
                 playground::matmul<params::DataType,
-                                   uint8_t(params::GemmVersion)>(
+                                   uint8_t(params::MatmulVersion)>(
                     params::M, params::N, params::K, d_A, d_B, d_C);
                 continue;
             }
-            if (i == params::NWarmup) {
+            if (i == params::NumWarmup) {
                 printf("[Playground] Warming Up Finished!\n");
             }
 
             cudaEventRecord(start, nullptr);
-            playground::matmul<params::DataType, int8_t(params::GemmVersion)>(
+            playground::matmul<params::DataType, int8_t(params::MatmulVersion)>(
                 params::M, params::N, params::K, d_A, d_B, d_C);
             cudaEventRecord(stop, nullptr);
             cudaEventSynchronize(stop);
@@ -74,7 +74,7 @@ int main()
     // If using cblas, run the function only once
     else {
         cudaEventRecord(start, nullptr);
-        playground::matmul<params::DataType, uint8_t(params::GemmVersion)>(
+        playground::matmul<params::DataType, uint8_t(params::MatmulVersion)>(
             params::M, params::N, params::K, A.data(), B.data(), C.data());
         cudaEventRecord(stop, nullptr);
         cudaEventElapsedTime(&runtime, start, stop);
@@ -88,7 +88,7 @@ int main()
         playground::compareMat(params::M, params::N, C_gt.data(), C.data());
 
     // calculate tflops and average error
-    float msecPerMatrixMul = sumRuntime / params::NRep;
+    float msecPerMatrixMul = sumRuntime / params::NumRep;
     double flopsPerMatrixMul = 2.0 * params::M * params::N * params::K;
     double tflops =
         (flopsPerMatrixMul * 1.0e-12f) / (msecPerMatrixMul / 1000.0f);
