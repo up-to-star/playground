@@ -47,7 +47,7 @@ int main()
         params::MatmulVersion, params::DataTypeName.data());
     // If not using cblas, execute the function multiple times to get average
     // runtime
-    if constexpr (params::MatmulVersion != playground::CBLAS_VERSION) {
+    if constexpr (params::MatmulVersion != playground::CBLAS_VER) {
         for (auto i = 0ULL; i < params::NumRep + params::NumWarmup; ++i) {
             // Warm Up
             if (i < params::NumWarmup) {

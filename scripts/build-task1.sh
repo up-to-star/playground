@@ -10,7 +10,7 @@ TaskNo="1"
 BuildType="Release"
 CleanFirst="false"
 CleanAll="false"
-TestKernelVersion="1"
+TestKernelVersion=1
 TestDataType="float32"
 
 # Parse arguments

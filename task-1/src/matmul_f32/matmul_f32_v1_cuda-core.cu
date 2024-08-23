@@ -7,7 +7,7 @@
 
 namespace playground
 {
-PG_MATMUL_SIG(float32_t, CUBLAS_VERSION, M, N, K, A, B, C)
+PG_MATMUL_SIG(float32_t, CUBLAS_VER, M, N, K, A, B, C)
 {
     const float32_t Alpha = 1.0f;
     const float32_t Beta = 0.0f;
