@@ -6,18 +6,18 @@
 
 #ifdef _MSC_VER
     // Inline
-    #define PJ_INLINE inline
+    #define PG_INLINE inline
     // Force Inline
-    #define PJ_FINLINE __forceinline
+    #define PG_FINLINE __forceinline
     // No Inline
-    #define PJ_NOINLINE __declspec(noinline)
+    #define PG_NOINLINE __declspec(noinline)
 #else
     // Inline
-    #define PJ_INLINE inline
+    #define PG_INLINE inline
     // Force Inline
-    #define PJ_FINLINE inline __attribute__((always_inline))
+    #define PG_FINLINE inline __attribute__((always_inline))
     // No Inline
-    #define PJ_NOINLINE __attribute__((noinline))
+    #define PG_NOINLINE __attribute__((noinline))
 #endif
 
 namespace playground

@@ -8,7 +8,7 @@ Fork this repository to your own github account:
 
 ![image](./docs/imgs/fork.png)
 
-Start a docker from image `playground:v1.0-cuda12.2-cudnn8-ubuntu22`:
+Start a docker from image `dev/cuda12.2-cudnn8-ubuntu22:latest`:
 
 ```bash
 # Params:
@@ -25,7 +25,7 @@ docker run --gpus all --name <container-name> -it \
     -e HTTPS_PROXY=<proxy-addr>  \
     -e http_proxy=<proxy-addr>  \
     -e https_proxy=<proxy-addr>  \
-    playground:v1.0-cuda12.2-cudnn8-ubuntu22
+    dev/cuda12.2-cudnn8-ubuntu22:latest
 ```
 
 Inside the container, clone the repo you forked:

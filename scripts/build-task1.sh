@@ -1,7 +1,10 @@
 #!/bin/bash
+
+# Note: Change these variables based on your environment
 export CC="gcc"
 export CXX="g++"
-export CUDA_CC="gcc"
+export CUDACXX="nvcc"
+export CUDA_CC="gcc-11"
 export CUDA_DIR="/usr/local/cuda"
 
 PROJ_HOME=$(pwd)
@@ -10,7 +13,7 @@ TaskNo="1"
 BuildType="Release"
 CleanFirst="false"
 CleanAll="false"
-TestKernelVersion="1"
+TestKernelVersion=1
 TestDataType="float32"
 
 # Parse arguments
