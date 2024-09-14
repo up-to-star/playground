@@ -13,7 +13,7 @@ namespace playground
 {
 
 template <typename T1, typename T2>
-PJ_FINLINE float32_t compareMat(size_t m, size_t n, T1 A, T2 B)
+PG_FINLINE float32_t compareMat(size_t m, size_t n, T1 A, T2 B)
 {
     float32_t gap = 0.0;
     float32_t err_sum = 0.0;
@@ -40,8 +40,8 @@ void initRandMat(std::size_t m, std::size_t n, T* mat)
 {
     srand(time(nullptr));
     for (std::size_t cnt = 0; cnt < m * n; cnt++) {
-        mat[cnt] = T(float32_t(rand()) / float32_t(RAND_MAX) +
-                     std::numeric_limits<float32_t>::min());
+        mat[cnt] = T{float32_t(rand()) / float32_t(RAND_MAX) +
+                     std::numeric_limits<float32_t>::min()};
     }
 }
 
