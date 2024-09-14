@@ -1,7 +1,10 @@
 #!/bin/bash
+
+# Note: Change these variables based on your environment
 export CC="gcc"
 export CXX="g++"
-export CUDA_CC="gcc"
+export CUDACXX="nvcc"
+export CUDA_CC="gcc-11"
 export CUDA_DIR="/usr/local/cuda"
 
 PROJ_HOME=$(pwd)
