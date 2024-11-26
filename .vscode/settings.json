@@ -20,5 +20,5 @@
         // "-j=6",
         "--pch-storage=memory",
         "--function-arg-placeholders=false",
-    ]
+    ],
 }
