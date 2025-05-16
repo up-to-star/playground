@@ -42,4 +42,16 @@ PLAYGROUND_MATMUL_SIG(float32_t, 1, M, N, K, A, B, C);
 
 PLAYGROUND_MATMUL_SIG(float16_t, 2, M, N, K, A, B, C);
 
+PLAYGROUND_MATMUL_SIG(float32_t, 2, M, N, K, A, B, C);
+
+PLAYGROUND_MATMUL_SIG(float16_t, 3, M, N, K, A, B, C);
+
+PLAYGROUND_MATMUL_SIG(float32_t, 3, M, N, K, A, B, C);
+
+PLAYGROUND_MATMUL_SIG(float16_t, 4, M, N, K, A, B, C);
+
+PLAYGROUND_MATMUL_SIG(float32_t, 4, M, N, K, A, B, C);
+
+PLAYGROUND_MATMUL_SIG(float16_t, 5, M, N, K, A, B, C);
+
 }  // namespace playground
