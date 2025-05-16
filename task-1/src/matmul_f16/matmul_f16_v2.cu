@@ -4,6 +4,8 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
+#define OFFSET(row, col, ld) ((row) * (ld) + (col))
+
 namespace playground
 {
 template <typename DType>
@@ -15,9 +17,9 @@ __global__ void sgemmV0(const DType* A, const DType* B, DType* C, size_t M,
     if (ty < M && tx < N) {
         DType c = 0.0f;
         for (size_t i = 0; i < K; i++) {
-            c += A[ty * K + i] * B[i * N + tx];
+            c += A[OFFSET(ty, i, K)] * B[OFFSET(i, tx, N)];
         }
-        C[ty * N + tx] = c;
+        C[OFFSET(ty, tx, N)] = c;
     }
     }
     
