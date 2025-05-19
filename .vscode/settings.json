@@ -21,4 +21,6 @@
         "--pch-storage=memory",
         "--function-arg-placeholders=false",
     ],
+    "files.autoSave": "afterDelay",
+    "window.zoomLevel": 0,
 }

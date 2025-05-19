@@ -70,10 +70,11 @@ __global__ void sgemm(const DType * __restrict__ A, const DType * __restrict__ B
 
     #pragma unroll
     for (int i = 0; i < TM; i++) {
+        // 大分块的起始行号by * BM+小分块的起始行号ty * TM+小分块内部的相对行号 i
         int store_c_gmem_m = by * BM + ty * TM + i;
         #pragma unroll
         for (int j = 0; j < TN; j += 4) {
-            int store_c_gmem_n = bx * BN + tx * TN + j;
+            int store_c_gmem_n = bx * BN + tx * TN + j; 
             int store_c_gmem_addr = OFFSET(store_c_gmem_m, store_c_gmem_n, N);
             auto trc = READ_FLOAT4(r_c[i][j]);
             WRITE_FLOAT4(C[store_c_gmem_addr]) = trc;
