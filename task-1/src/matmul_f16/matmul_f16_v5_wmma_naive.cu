@@ -14,7 +14,7 @@ namespace playground
 {
 
 template <typename DType, const int WMMA_M = 16, const int WMMA_N = 16, const int WMMA_K = 16>
-__global__ void hgemm_naive(const DType* __restrict__ A,
+__global__ void hgemm_wmma_naive(const DType* __restrict__ A,
                             const DType* __restrict__ B, DType* __restrict__ C,
                             const size_t M, const size_t N, const size_t K)
 {
@@ -43,14 +43,14 @@ __global__ void hgemm_naive(const DType* __restrict__ A,
 
 }
 
-PLAYGROUND_MATMUL_SIG(float16_t, 2, M, N, K, A, B, C)
+PLAYGROUND_MATMUL_SIG(float16_t, 5, M, N, K, A, B, C)
 {
     const int WMMA_M = 16;
     const int WMMA_N = 16;
     const int WMMA_K = 16;
-    dim3 block(32);
-    dim3 grid(div_ceil(N, WMMA_N), div_ceil(M, WMMA_M));
-    hgemm_naive<float16_t, WMMA_M, WMMA_N, WMMA_K><<<grid, block>>>(A, B, C, M, N, K);
+    dim3 blockDim(8, 4);
+    dim3 gridDim(div_ceil(N, WMMA_N), div_ceil(M, WMMA_M));
+    hgemm_wmma_naive<float16_t, WMMA_M, WMMA_N, WMMA_K><<<gridDim, blockDim>>>(A, B, C, M, N, K);
 }
 
 }
