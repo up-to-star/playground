@@ -54,15 +54,15 @@ __global__ void hgemm_wmma_mma4x2(const DType* __restrict__ A,
     const int load_a_gemem_m = by * BM + load_a_smem_m;
     const int load_b_gemem_n = bx * BN + load_b_smem_n;
 
-    if (load_a_gemem_m >= M && load_b_gemem_n >= N) {
+    if (load_a_gemem_m >= M || load_b_gemem_n >= N) {
         return;
     }
     wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, DType> c_frag;
     wmma::fill_fragment(c_frag, 0.0);
-    wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, float16_t,
+    wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, DType,
                    wmma::row_major>
         a_frag;
-    wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, float16_t,
+    wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, DType,
                    wmma::row_major>
         b_frag;
 
