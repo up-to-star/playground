@@ -61,6 +61,7 @@ __global__ void sgemmV7(const DType * __restrict__ A, const DType * __restrict__
         WRITE_FLOAT4(sb[0][load_b_smem_k][load_b_smem_n]) = t_b;
     }
 
+    #pragma unroll
     for (int bk = 1; bk < (K + BK - 1) / BK; bk++) {
         int smem_sel = (bk - 1) & 1;
         int smem_sel_next = bk & 1;
