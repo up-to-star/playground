@@ -20,7 +20,7 @@ using namespace nvcuda;
 #define CP_ASYNC_CA(dst, src, bytes)                                           \
     asm volatile(                                                              \
         "cp.async.ca.shared.global.L2::128B [%0], [%1], %2;\n" ::"r"(dst),     \
-        "l"(dst), "n"(bytes))
+        "l"(src), "n"(bytes))
 #define CP_ASYNC_CG(dst, src, bytes)                                           \
     asm volatile(                                                              \
         "cp.async.cg.shared.global.L2::128B [%0], [%1], %2;\n" ::"r"(dst),     \
@@ -201,8 +201,16 @@ __global__ void hgemm_wmma_mma4x2_warp2x4_double_buffer_ptx(
 PLAYGROUND_MATMUL_SIG(float16_t, 10, M, N, K, A, B, C)
 {
     const int BM = 128, BN = 128;
+    constexpr int WMMA_M = 16, WMMA_N = 16, WMMA_K = 16;
+    constexpr int WMMA_TILE_M = 4, WMMA_TILE_N = 2;
+    constexpr int WARP_TILE_M = 2, WARP_TILE_N = 4;
+    constexpr int OFFSET = 8;
+    // constexpr int OFFSET = (64 - (BK % 64)) % 64;
     dim3 blockDim(32, 8);
     dim3 gridDim(div_ceil(N, BN), div_ceil(M, BM));
-    hgemm_wmma_mma4x2_warp2x4_double_buffer_ptx<float16_t, 16, 16, 16, 4, 2, 2, 4, 8><<<gridDim, blockDim>>>(A, B, C, M, N, K);
+    hgemm_wmma_mma4x2_warp2x4_double_buffer_ptx<
+        float16_t, WMMA_M, WMMA_N, WMMA_K, WMMA_TILE_M, WMMA_TILE_N,
+        WARP_TILE_M, WARP_TILE_N, OFFSET>
+        <<<gridDim, blockDim>>>(A, B, C, M, N, K);
 }
 }
