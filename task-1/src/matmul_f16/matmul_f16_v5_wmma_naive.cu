@@ -21,8 +21,9 @@ __global__ void hgemm_wmma_naive(const DType* __restrict__ A,
     const int load_gmem_a_m = blockIdx.y * WMMA_M;
     const int load_gmem_b_n = blockIdx.x * WMMA_N;
     const int NUM_K_TILES = div_ceil(K, WMMA_K);
-    if (load_gmem_a_m >= M || load_gmem_b_n >= N)
+    if (load_gmem_a_m >= static_cast<int>(M) || load_gmem_b_n >= static_cast<int>(N)) {
         return;
+}
 
     wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, DType, wmma::row_major> a_frag;
     wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, DType, wmma::row_major> b_frag;
@@ -31,7 +32,7 @@ __global__ void hgemm_wmma_naive(const DType* __restrict__ A,
     wmma::fill_fragment(c_frag, 0.0f);
 
 #pragma unroll
-    for (size_t k = 0; k < NUM_K_TILES; k++) {
+    for (int k = 0; k < NUM_K_TILES; k++) {
         wmma::load_matrix_sync(a_frag, A + load_gmem_a_m * K + k * WMMA_K, K);
         wmma::load_matrix_sync(b_frag, B + (k * WMMA_K) * N + load_gmem_b_n, N);
 

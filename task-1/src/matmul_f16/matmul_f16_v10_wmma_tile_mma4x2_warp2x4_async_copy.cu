@@ -60,7 +60,7 @@ __global__ void hgemm_wmma_mma4x2_warp2x4_double_buffer_ptx(
 
     const int load_a_gmem_m = by * BM + load_a_smem_m;
     const int load_b_gmem_n = bx * BN + load_b_smem_n;
-    if (load_a_gmem_m >= M || load_b_gmem_n >= N) {
+    if (load_a_gmem_m >= static_cast<int>(M) || load_b_gmem_n >= static_cast<int>(N)) {
         return;
     }
 
