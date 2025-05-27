@@ -31,7 +31,7 @@ template <typename DType, const int WMMA_M = 16, const int WMMA_N = 16,
           const int WMMA_TILE_N = 2, const int WARP_TILE_M = 2,
           const int WARP_TILE_N = 4, const int A_PAD = 0, const int B_PAD = 0,
           const int K_STAGES = 2>
-__global__ void hgemm_wmma16x16x16_mma4x2_warp2x4(const DType* __restrict__ A,
+__global__ void __launch_bounds__(256) hgemm_wmma16x16x16_mma4x2_warp2x4(const DType* __restrict__ A,
                                                   const DType* __restrict__ B,
                                                   DType* __restrict__ C,
                                                   const int M, const int N,
