@@ -9,7 +9,12 @@
 
 using namespace nvcuda;
 
-#define div_ceil(n, m) (((n) + (m) - 1) / (m))
+#define HOST_DEVICE_INLINE __device__ __host__ inline
+HOST_DEVICE_INLINE
+int div_ceil(int a, int b)
+{
+    return (a % b != 0) ? (a / b + 1) : (a / b);
+}
 #define WARP_SIZE 32
 #define READ128BITS(pointer)                                                   \
     (*reinterpret_cast<const float4*>(std::addressof(pointer)))

@@ -1,14 +1,13 @@
 #include "playground/system.hpp"
 #include "playground/matmul.hpp"
-
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <mma.h>
 
 using namespace nvcuda;
 
+#define HOST_DEVICE_INLINE __device__ __host__ inline
 #define WARP_SIZE  32
-#define div_ceil(n, m) (((n) - (m) + 1) / (m))
 #define CP_ASYNC_COMMIT_GROUP() asm volatile("cp.async.commit_group;\n" ::)
 #define CP_ASYNC_WAIT_ALL() asm volatile("cp.async.wait_all;\n" ::)
 #define CP_ASYNC_WAIT_GROUP(n)                                                 \
@@ -22,22 +21,65 @@ using namespace nvcuda;
         "cp.async.cg.shared.global.L2::128B [%0], [%1], %2;\n" ::"r"(dst),     \
         "l"(src), "n"(bytes))
 
+HOST_DEVICE_INLINE
+int div_ceil(int a, int b)
+{
+    return (a % b != 0) ? (a / b + 1) : (a / b);
+}
 
 namespace playground
 {
+
+__device__ __forceinline__ int2 swizzle_block_zorder(int bx, int by,
+                                                     int gridDimX)
+{
+    unsigned int morton = 0;
+    for (int i = 0; i < (sizeof(unsigned int) * 8 / 2); i++) {
+        morton |= (bx & (1 << i)) << i | (by & (1 << i)) << (i + 1);
+    }
+    int swizzled_bx = morton % gridDimX;
+    int swizzled_by = morton / gridDimX;
+    return make_int2(swizzled_bx, swizzled_by);
+}
+
+__device__ __forceinline__ int2 swizzle_block_tiled(int bx, int by,
+                                                    int gridDimX, int gridDimY,
+                                                    int tile_size = 4)
+{
+    int tile_x = bx / tile_size;
+    int tile_y = by / tile_size;
+    int inner_x = bx % tile_size;
+    int inner_y = by % tile_size;
+    int new_bx =
+        tile_y * tile_size + inner_x;  // 交换 tile_x 和 tile_y 以改变访问顺序
+    int new_by = tile_x * tile_size + inner_y;
+    return make_int2(new_bx % gridDimX, new_by % gridDimY);
+}
 
 template <typename DType, const int WMMA_M = 16, const int WMMA_N = 16,
           const int WMMA_K = 16, const int WMMA_TILE_M = 4,
           const int WMMA_TILE_N = 2, const int WARP_TILE_M = 2,
           const int WARP_TILE_N = 4, const int A_PAD = 0, const int B_PAD = 0,
-          const int K_STAGES = 2>
+          const int K_STAGES = 2, const bool BLOCK_SWIZZLE = false>
 __global__ void __launch_bounds__(256) hgemm_wmma16x16x16_mma4x2_warp2x4(const DType* __restrict__ A,
                                                   const DType* __restrict__ B,
                                                   DType* __restrict__ C,
                                                   const int M, const int N,
                                                   const int K)
 {
-    const int bx = blockIdx.x + blockIdx.z * gridDim.x, by = blockIdx.y;
+
+    // int2 swizzled_block =
+    //     swizzle_block_tiled(blockIdx.x, blockIdx.y, gridDim.x, gridDim.y);
+    // const int bx = swizzled_block.x;
+    // const int by = swizzled_block.y;
+
+    // int2 swizzled_block =
+    //     swizzle_block_zorder(blockIdx.x, blockIdx.y, gridDim.x);
+    // const int bx = swizzled_block.x;
+    // const int by = swizzled_block.y;
+    const int bx = blockIdx.x + ((int) BLOCK_SWIZZLE) * blockIdx.z *
+    gridDim.x, by = blockIdx.y;
+    // const int bx = blockIdx.x, by = blockIdx.y;
     const int NUM_K_TILES = div_ceil(K, WMMA_K);
     constexpr int BM = WMMA_M * WMMA_TILE_M * WARP_TILE_M;
     constexpr int BN = WMMA_N * WMMA_TILE_N * WARP_TILE_N;
@@ -227,11 +269,15 @@ PLAYGROUND_MATMUL_SIG(float16_t, 11, M, N, K, A, B, C)
     const int WMMA_TILE_M = 4, WMMA_TILE_N = 2;
     const int WARP_TILE_M = 2, WARP_TILE_N = 4;
     const int A_PAD = 8, B_PAD = 8;
-    dim3 blockDim(32, 8);
-    dim3 gridDim(div_ceil(N, BN), div_ceil(M, BM));
+    dim3 blockDim(256);
+    const int BX = div_ceil(N, BN), BY = div_ceil(M, BM);
+    const int NSPLIT = 2048;
+    int split_num = (N + NSPLIT - 1) / NSPLIT;
+    dim3 gridDim((BX + split_num - 1) / split_num, BY, split_num);
+    // dim3 gridDim(BX, BY);
     hgemm_wmma16x16x16_mma4x2_warp2x4<float16_t, WMMA_M, WMMA_N, WMMA_K,
                                       WMMA_TILE_M, WMMA_TILE_N, WARP_TILE_M,
-                                      WARP_TILE_N, A_PAD, B_PAD, 4>
+                                      WARP_TILE_N, A_PAD, B_PAD, 3, true>
         <<<gridDim, blockDim>>>(A, B, C, M, N, K);
 }
 
