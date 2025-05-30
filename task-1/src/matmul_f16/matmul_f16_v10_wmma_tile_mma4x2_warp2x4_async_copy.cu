@@ -203,7 +203,7 @@ __global__ void hgemm_wmma_mma4x2_warp2x4_double_buffer_ptx(
     }
 }
 
-PLAYGROUND_MATMUL_SIG(float16_t, 10, M, N, K, A, B, C)
+PLAYGROUND_MATMUL_DEC(float16_t, 10, M, N, K, A, B, C)
 {
     const int BM = 128, BN = 128;
     constexpr int WMMA_M = 16, WMMA_N = 16, WMMA_K = 16;

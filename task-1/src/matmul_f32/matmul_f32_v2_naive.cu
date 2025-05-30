@@ -20,8 +20,8 @@ namespace playground
             C[ty * N + tx] = c;
         }
     }
-    
-    PLAYGROUND_MATMUL_SIG(float32_t, 2, M, N, K, A, B, C)
+
+    PLAYGROUND_MATMUL_DEC(float32_t, 2, M, N, K, A, B, C)
     {
         dim3 blockDim(32, 32);
         dim3 gridDim((N + blockDim.x - 1) / blockDim.x, (M + blockDim.y - 1) / blockDim.y);

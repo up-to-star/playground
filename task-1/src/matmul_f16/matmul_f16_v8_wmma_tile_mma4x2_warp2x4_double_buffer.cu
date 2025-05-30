@@ -136,7 +136,7 @@ __global__ void hgemm_wmma_mma4x2_warp2x4_double_buffer(
 
 }
 
-PLAYGROUND_MATMUL_SIG(float16_t, 8, M, N, K, A, B, C)
+PLAYGROUND_MATMUL_DEC(float16_t, 8, M, N, K, A, B, C)
 {
     const int BM = 128, BN = 128;
     dim3 blockDim(32, 8);

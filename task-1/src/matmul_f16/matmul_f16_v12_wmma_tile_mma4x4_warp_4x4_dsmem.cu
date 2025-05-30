@@ -236,8 +236,7 @@ __global__ void __launch_bounds__(512)
     }
 }
 
-
-PLAYGROUND_MATMUL_SIG(float16_t, 12, M, N, K, A, B, C)
+PLAYGROUND_MATMUL_DEC(float16_t, 12, M, N, K, A, B, C)
 {
     constexpr int BM = 256, BN = 256;
     constexpr int BK = 16;

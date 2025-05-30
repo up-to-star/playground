@@ -262,7 +262,7 @@ __global__ void __launch_bounds__(256) hgemm_wmma16x16x16_mma4x2_warp2x4(const D
 
 
 
-PLAYGROUND_MATMUL_SIG(float16_t, 11, M, N, K, A, B, C)
+PLAYGROUND_MATMUL_DEC(float16_t, 11, M, N, K, A, B, C)
 {
     const int BM = 128, BN = 128;
     const int WMMA_M = 16, WMMA_N = 16, WMMA_K = 16;

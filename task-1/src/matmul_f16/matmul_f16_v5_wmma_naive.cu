@@ -44,7 +44,7 @@ __global__ void hgemm_wmma_naive(const DType* __restrict__ A,
 
 }
 
-PLAYGROUND_MATMUL_SIG(float16_t, 5, M, N, K, A, B, C)
+PLAYGROUND_MATMUL_DEC(float16_t, 5, M, N, K, A, B, C)
 {
     const int WMMA_M = 16;
     const int WMMA_N = 16;

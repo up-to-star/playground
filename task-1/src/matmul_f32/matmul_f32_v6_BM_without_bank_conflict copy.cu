@@ -98,7 +98,7 @@ __global__ void sgemmV6(const DType * __restrict__ A, const DType * __restrict__
     }
 }
 
-PLAYGROUND_MATMUL_SIG(float32_t, 6, M, N, K, A, B, C)
+PLAYGROUND_MATMUL_DEC(float32_t, 6, M, N, K, A, B, C)
 {
     const int BM = 128, BN = 128;
     const int TM = 8, TN = 8;

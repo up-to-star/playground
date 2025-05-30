@@ -125,7 +125,7 @@ __global__ void hgemm_wmma_mma4x2_warp2x4(const DType* __restrict__ A,
     }
 }
 
-PLAYGROUND_MATMUL_SIG(float16_t, 7, M, N, K, A, B, C)
+PLAYGROUND_MATMUL_DEC(float16_t, 7, M, N, K, A, B, C)
 {
     const int BM = 128, BN = 128;
 

@@ -114,8 +114,7 @@ __global__ void hgemm_naive_v2(const DType* __restrict__ A,
     }
 }
 
-
-PLAYGROUND_MATMUL_SIG(float16_t, 4, M, N, K, A, B, C)
+PLAYGROUND_MATMUL_DEC(float16_t, 4, M, N, K, A, B, C)
 {
     const int BM = 128, BN = 128;
     const int BK = 8;

@@ -699,7 +699,7 @@ __global__ void hgemm_v13_quad_buffered(const float16_t* __restrict__ a,
     }
 }
 
-PLAYGROUND_MATMUL_SIG(float16_t, 14, M, N, K, A, B, C)
+PLAYGROUND_MATMUL_DEC(float16_t, 14, M, N, K, A, B, C)
 {
     const int BM = 128, BN = 256, BK = 32;
     dim3 blockDim(8, 32);

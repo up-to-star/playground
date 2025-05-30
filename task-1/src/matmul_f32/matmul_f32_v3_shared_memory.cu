@@ -41,12 +41,13 @@ __global__ void sgemmV0(const DType* A, const DType* B, DType* C, size_t M,
         C[ty * N + tx] = temp;
     }
 }
-    
-    PLAYGROUND_MATMUL_SIG(float32_t, 3, M, N, K, A, B, C)
-    {
-        constexpr unsigned int BLOCK_SIZE = 32;
-        dim3 blockDim(BLOCK_SIZE, BLOCK_SIZE);
-        dim3 gridDim((N + blockDim.x - 1) / blockDim.x, (M + blockDim.y - 1) / blockDim.y);
-        sgemmV0<float32_t, BLOCK_SIZE><<<gridDim, blockDim>>>(A, B, C, M, N, K);
+
+PLAYGROUND_MATMUL_DEC(float32_t, 3, M, N, K, A, B, C)
+{
+    constexpr unsigned int BLOCK_SIZE = 32;
+    dim3 blockDim(BLOCK_SIZE, BLOCK_SIZE);
+    dim3 gridDim((N + blockDim.x - 1) / blockDim.x,
+                 (M + blockDim.y - 1) / blockDim.y);
+    sgemmV0<float32_t, BLOCK_SIZE><<<gridDim, blockDim>>>(A, B, C, M, N, K);
     }
 }
