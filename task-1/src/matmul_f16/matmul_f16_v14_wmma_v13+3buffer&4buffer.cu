@@ -479,7 +479,7 @@ __global__ void hgemm_v13_quad_buffered(const float16_t* __restrict__ a,
     CP_ASYNC_WAIT_GROUP(2);
     __syncthreads();
 
-#pragma unroll 32
+#pragma unroll 24
     for (int bk = 3; bk < NUM_K_TILES; bk++) {
 
         // int smem_sel = (bk & 1) ^ 1;
