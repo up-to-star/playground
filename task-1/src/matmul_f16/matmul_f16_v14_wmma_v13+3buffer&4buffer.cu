@@ -20,6 +20,15 @@ using namespace nvcuda;
 #define COMMIT_ASYNC_GROUP() asm volatile("cp.async.commit_group;\n" ::)
 
 #define WAIT_ASYNC_GROUP() asm volatile("cp.async.wait_group 0;\n" ::)
+#define CP_ASYNC_WAIT_GROUP(n)                                                \
+    asm volatile("cp.async.wait_group %0;\n" ::"n"(n))
+
+#define HOST_DEVICE_INLINE __device__ __host__ inline
+HOST_DEVICE_INLINE
+int div_ceil(int a, int b)
+{
+    return (a % b != 0) ? (a / b + 1) : (a / b);
+}
 
 namespace playground
 {
@@ -133,21 +142,19 @@ __global__ void hgemm_v13_triple_buffered(const float16_t* __restrict__ a,
                              &b[load_b_gmem_addr + 3 * N], 16);
 
         COMMIT_ASYNC_GROUP();
-        WAIT_ASYNC_GROUP();
+        CP_ASYNC_WAIT_GROUP(1);
 
         __syncthreads();
     }
 
 #pragma unroll 32
-    for (int bk = 2; bk < K / BK; bk++) {
+    for (int bk = 2; bk < div_ceil(K, BK); bk++) {
 
         // int smem_sel = (bk & 1) ^ 1;
         // int smem_sel_next = ((bk - 1) & 1) ^ 1;
-        int smem_sel = (bk % 3);
-        int smem_sel_next = ((bk + 1) % 3);
+        int smem_sel_next = (bk % 3);
+        int smem_sel = ((bk + 1) % 3);
 
-        load_a_gmem_addr += BK;
-        load_b_gmem_addr += BK * N;
 
         ASYNC_COPY_TO_SHARED(load_a_smem_addr_0 + smem_sel_next *
                                                       s_a_db_offset *
@@ -173,7 +180,9 @@ __global__ void hgemm_v13_triple_buffered(const float16_t* __restrict__ a,
                                                       s_b_db_offset *
                                                       (int) sizeof(float16_t),
                              &b[load_b_gmem_addr + 3 * N], 16);
-
+        COMMIT_ASYNC_GROUP();
+        load_a_gmem_addr += BK;
+        load_b_gmem_addr += BK * N;
         wmma::load_matrix_sync(frag_a[0][0],
                                &s_a[smem_sel * s_a_db_offset +
                                     (comp_c_frag_m * 64) * (BK + APAD) + 0],
@@ -256,18 +265,16 @@ __global__ void hgemm_v13_triple_buffered(const float16_t* __restrict__ a,
             }
         }
 
-        COMMIT_ASYNC_GROUP();
-        if (bk > 2) {
-            WAIT_ASYNC_GROUP();
-        }
-        
-
+        CP_ASYNC_WAIT_GROUP(1);
         __syncthreads();
+        
     }
-
+    CP_ASYNC_WAIT_GROUP(0);
+    __syncthreads();
     // int smem_sel = ((K / BK) & 1) ^ 1;
 #pragma unroll
-    for (int smem_sel = (K / BK) % 3; smem_sel < 3; smem_sel++) {
+    for (int k = 0; k < 2; k++) {
+        const int smem_sel = ((div_ceil(K, BK) - 2 + k) % 3);
         wmma::load_matrix_sync(frag_a[0][0],
                                &s_a[smem_sel * s_a_db_offset +
                                     (comp_c_frag_m * 64) * (BK + APAD) + 0],
@@ -349,7 +356,7 @@ __global__ void hgemm_v13_triple_buffered(const float16_t* __restrict__ a,
                                frag_c[i][j]);
             }
         }
-        __syncthreads();
+        // __syncthreads();
     }
 
     
@@ -375,7 +382,7 @@ __global__ void hgemm_v13_quad_buffered(const float16_t* __restrict__ a,
     const int BM = 128;
     const int BN = 256;
     const int BK = 32;
-
+    const int NUM_K_TILES = K / BK;
     int by = blockIdx.y;
     int bx = blockIdx.z * gridDim.x + blockIdx.x;
     if (bx >= N / BN || by >= M / BM) {
@@ -402,10 +409,10 @@ __global__ void hgemm_v13_quad_buffered(const float16_t* __restrict__ a,
     wmma::fragment<wmma::accumulator, 16, 16, 16, float16_t> frag_c[4][4];
 
 #pragma unroll
-    for (auto & i : frag_c) {
+    for (int i = 0; i < 4; i++) {
 #pragma unroll
-        for (auto & j : i) {
-            wmma::fill_fragment(j, 0.0);
+        for (int j = 0; j < 4; j++) {
+            wmma::fill_fragment(frag_c[i][j], 0.0);
         }
     }
 
@@ -441,7 +448,7 @@ __global__ void hgemm_v13_quad_buffered(const float16_t* __restrict__ a,
     int comp_c_frag_m = wid & 1;
     int comp_c_frag_n = wid >> 1;
 
-    // Preload 4 buffers
+    // Preload 3 buffers
 #pragma unroll
     for (int buf = 0; buf < 3; buf++) {
         ASYNC_COPY_TO_SHARED(load_a_smem_addr_0 +
@@ -465,24 +472,20 @@ __global__ void hgemm_v13_quad_buffered(const float16_t* __restrict__ a,
                              &b[load_b_gmem_addr + 3 * N], 16);
 
         COMMIT_ASYNC_GROUP();
-        if (buf < 3) {
-            WAIT_ASYNC_GROUP();
-        }
 
         load_a_gmem_addr += BK;
         load_b_gmem_addr += BK * N;
     }
+    CP_ASYNC_WAIT_GROUP(2);
+    __syncthreads();
 
 #pragma unroll 32
-    for (int bk = 3; bk < K / BK; bk++) {
+    for (int bk = 3; bk < NUM_K_TILES; bk++) {
 
         // int smem_sel = (bk & 1) ^ 1;
         // int smem_sel_next = ((bk - 1) & 1) ^ 1;
-        int smem_sel = (bk & 3);
-        int smem_sel_next = ((bk + 1) & 3);
-
-        load_a_gmem_addr += BK;
-        load_b_gmem_addr += BK * N;
+        int smem_sel_next = bk & 3;
+        int smem_sel = (bk + 1) & 3;
 
         ASYNC_COPY_TO_SHARED(load_a_smem_addr_0 + smem_sel_next *
                                                       s_a_db_offset *
@@ -508,7 +511,8 @@ __global__ void hgemm_v13_quad_buffered(const float16_t* __restrict__ a,
                                                       s_b_db_offset *
                                                       (int) sizeof(float16_t),
                              &b[load_b_gmem_addr + 3 * N], 16);
-
+        load_a_gmem_addr += BK;
+        load_b_gmem_addr += BK * N;
         wmma::load_matrix_sync(frag_a[0][0],
                                &s_a[smem_sel * s_a_db_offset +
                                     (comp_c_frag_m * 64) * (BK + APAD) + 0],
@@ -590,18 +594,18 @@ __global__ void hgemm_v13_quad_buffered(const float16_t* __restrict__ a,
                                frag_c[i][j]);
             }
         }
-
         COMMIT_ASYNC_GROUP();
-        if (bk > 4) {
-            WAIT_ASYNC_GROUP();
-        }
+        CP_ASYNC_WAIT_GROUP(2);
 
         __syncthreads();
     }
 
+    CP_ASYNC_WAIT_GROUP(0);
+    // __syncthreads();
     // int smem_sel = ((K / BK) & 1) ^ 1;
 #pragma unroll
-    for (int smem_sel = (K / BK) & 3; smem_sel < 4; smem_sel++) {
+    for (int k = 0; k < 3; k++) {
+        const int smem_sel = ((NUM_K_TILES - 3 + k) & 3);
         wmma::load_matrix_sync(frag_a[0][0],
                                &s_a[smem_sel * s_a_db_offset +
                                     (comp_c_frag_m * 64) * (BK + APAD) + 0],
@@ -702,6 +706,7 @@ __global__ void hgemm_v13_quad_buffered(const float16_t* __restrict__ a,
 PLAYGROUND_MATMUL_DEC(float16_t, 14, M, N, K, A, B, C)
 {
     const int BM = 128, BN = 256, BK = 32;
+    // const int K_STAGE = 4;
     dim3 blockDim(8, 32);
     int BX = (N + BN - 1) / BN;
     int BY = (M + BM - 1) / BM;

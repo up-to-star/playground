@@ -110,7 +110,7 @@ __global__ void __launch_bounds__(512)
             smem_b_base_ptr + (k * s_b_stage_offset +
                                load_b_smem_k * (BN + B_PAD) + load_b_smem_n) *
                                   sizeof(DType);
-        CP_ASYNC_CG(load_b_smem_ptr, &B[load_b_gmem_addr], 16);
+        CP_ASYNC_CA(load_b_smem_ptr, &B[load_b_gmem_addr], 16);
 
         CP_ASYNC_COMMIT_GROUP();
     }
@@ -131,12 +131,12 @@ __global__ void __launch_bounds__(512)
             smem_a_base_ptr + (smem_sel_next * s_a_stage_offset +
                                load_a_smem_m * (BK + A_PAD) + load_a_smem_k) *
                                   sizeof(DType);
-        CP_ASYNC_CG(load_a_smem_ptr, &A[load_a_gmem_addr], 16);
+        CP_ASYNC_CA(load_a_smem_ptr, &A[load_a_gmem_addr], 16);
         uint32_t load_b_smem_ptr =
             smem_b_base_ptr + (smem_sel_next * s_b_stage_offset +
                                load_b_smem_k * (BN + B_PAD) + load_b_smem_n) *
                                   sizeof(DType);
-        CP_ASYNC_CG(load_b_smem_ptr, &B[load_b_gmem_addr], 16);
+        CP_ASYNC_CA(load_b_smem_ptr, &B[load_b_gmem_addr], 16);
         CP_ASYNC_COMMIT_GROUP();
 
         wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, DType,

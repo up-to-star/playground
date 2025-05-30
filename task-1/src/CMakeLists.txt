@@ -24,6 +24,7 @@ target_compile_definitions(
 target_include_directories(
     ${TARGET_NAME} PRIVATE 
     ${PROJECT_SOURCE_DIR}/include
+    ${CXXOPTS_INCLUDE_DIRS}
 )
 
 target_link_libraries(
@@ -31,7 +32,6 @@ target_link_libraries(
     CUDA::cudart 
     CUDA::cublas
     OpenBLAS::OpenBLAS
-    cxxopts::cxxopts
     nvidia::cutlass::cutlass
 )
 
