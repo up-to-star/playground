@@ -707,7 +707,7 @@ PLAYGROUND_MATMUL_DEC(float16_t, 14, M, N, K, A, B, C)
 {
     const int BM = 128, BN = 256, BK = 32;
     // const int K_STAGE = 4;
-    dim3 blockDim(8, 32);
+    dim3 blockDim(32, 8);
     int BX = (N + BN - 1) / BN;
     int BY = (M + BM - 1) / BM;
 
