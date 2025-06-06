@@ -762,7 +762,7 @@ PLAYGROUND_MATMUL_DEC(float16_t, 19, M, N, K, A, B, C)
     const int MMA_M = 16, MMA_N = 8, MMA_K = 16;
     cudaFuncSetAttribute(
         hgemm_mma_stage_v2<MMA_M, MMA_N, MMA_K>,
-        cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
+        cudaFuncAttributeMaxDynamicSharedMemorySize, 131072);
     hgemm_mma_stage_v2<MMA_M, MMA_N, MMA_K>
         <<<gridDim, blockDim, sharedMemSize>>>(A, B, C, M, N, K);
     cudaError_t err = cudaGetLastError();
