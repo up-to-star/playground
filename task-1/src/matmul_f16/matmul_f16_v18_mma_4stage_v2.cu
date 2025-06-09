@@ -4,9 +4,12 @@
 
 
 #include <algorithm>
+#include <cstdlib>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <mma.h>
+#include <utility>
+#include <cstring>
 
 
 namespace playground
@@ -36,6 +39,7 @@ namespace playground
 #define THREAD_COPY_BYTES 16
 
 #define CHUNK_LINE_BYTES 64  // CHUNK_K * MMA_K * sizeof(float16_t)
+// 每个 warp 每次迭代（通过 cp.async）能拷贝的 行数（每行 MMA_K=16 个 float16）
 #define CHUNK_COPY_LINES_PER_WARP                                             \
     8  // WARP_SIZE * THREAD_COPY_BYTES / CHUNK_LINE_BYTES
 #define CHUNK_COPY_LINE_LANES 4  // WARP_SIZE / CHUNK_COPY_LINES_PER_WARP
@@ -86,7 +90,9 @@ __global__ void hgemm_mma_stage_v2(const float16_t* __restrict__ A,
 
     float16_t* smem_warp_tile_row_ptr =
         &smem[0][0] + (warp_id / BLOCK_ROW_WARPS) * C_SMEM_STRIDE * WARP_ROWS;
-    // 每个warp处理2个MMA tile
+
+    // smem_warp_stream_ptr指向当前Warp在共享内存中存储​​计算结果（矩阵C）的起始位置​​。后续操作会将Tensor
+    // Core计算的局部结果（存储在寄存器RC中）暂存到共享内存，最终通过向量化方式（如int4）批量写回全局内存。这种设计避免了直接写全局内存的随机访问，提升内存带宽利用率。
     const float16_t* smem_warp_stream_ptr =
         &smem[0][0] + warp_id * MMA_M * 2 * C_SMEM_STRIDE;
 
@@ -281,6 +287,8 @@ __global__ void hgemm_mma_stage_v2(const float16_t* __restrict__ A,
 
     __syncthreads();
 
+    // ---------------------------------
+
     uint32_t RA[2][WARP_COL_TILES][4];
     uint32_t RB[2][WARP_ROW_TILES][2];
 
@@ -320,7 +328,7 @@ __global__ void hgemm_mma_stage_v2(const float16_t* __restrict__ A,
                     B_smem_lane_addr);
     }
 
-#pragma unroll
+#pragma unroll 16
     for (size_t tile_k = CHUNK_K * (K_STAGE - 1); tile_k < K_tiles;
          tile_k += CHUNK_K) {
         reg_store_idx ^= 1;

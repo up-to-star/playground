@@ -168,19 +168,15 @@ __global__ void hgemm_mma_4stage_v3(const float16_t* __restrict__ A,
         for (int j = 0; j < WARP_TILE_N; j++) {
             const int warp_b_smem_n =
                 warp_n * (MMA_N * WARP_TILE_N) + j * MMA_N;
-            const int lane_b_smem_k = lane_id;
+            const int lane_b_smem_k = lane_id % 16;
             const int lane_b_smem_n = warp_b_smem_n;
             uint32_t lane_b_smem_ptr =
                 smem_b_base_ptr +
                 (smem_sel * sb_stage_offset + lane_b_smem_k * (BN + B_PAD) +
                  lane_b_smem_n) *
                     sizeof(float16_t);
-            if (lane_id < MMA_K) {
-                LDMATRIX_X2_T(RB[0][j][0], RB[0][j][1], lane_b_smem_ptr);
-            } else {
-                LDMATRIX_X2_T(RB[1][j][0], RB[1][j][1], lane_b_smem_ptr);
-            }
-            
+            const int idx = lane_id / 16;
+            LDMATRIX_X2_T(RB[idx][j][0], RB[idx][j][1], lane_b_smem_ptr);
         }
 
 #pragma unroll
@@ -235,21 +231,15 @@ __global__ void hgemm_mma_4stage_v3(const float16_t* __restrict__ A,
             for (int j = 0; j < WARP_TILE_N; j++) {
                 const int warp_b_smem_n =
                     warp_n * (MMA_N * WARP_TILE_N) + j * MMA_N;
-                const int lane_b_smem_k = lane_id % 16;
+                const int lane_b_smem_k = lane_id;
                 const int lane_b_smem_n = warp_b_smem_n;
-                uint32_t lane_b_smem_ptr_1 =
+                uint32_t lane_b_smem_ptr =
                     smem_b_base_ptr +
                     (smem_sel * sb_stage_offset +
                      lane_b_smem_k * (BN + B_PAD) + lane_b_smem_n) *
                         sizeof(float16_t);
-                LDMATRIX_X2_T(RB[0][j][0], RB[0][j][1], lane_b_smem_ptr_1);
-
-                uint32_t lane_b_smem_ptr_2 =
-                    smem_b_base_ptr +
-                    (smem_sel * sb_stage_offset +
-                     (lane_b_smem_k + 16) * (BN + B_PAD) + lane_b_smem_n) *
-                        sizeof(float16_t);
-                LDMATRIX_X2_T(RB[1][j][0], RB[1][j][1], lane_b_smem_ptr_2);
+                const int idx = lane_id / 16;
+                LDMATRIX_X2_T(RB[idx][j][0], RB[idx][j][1], lane_b_smem_ptr);
             }
             // MMA 计算
 #pragma unroll

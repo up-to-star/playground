@@ -1,5 +1,6 @@
 #include "playground/matmul.hpp"
 #include "playground/system.hpp"
+#include "playground/common.hpp"
 
 #include <cstdio>
 #include <cuda.h>
@@ -10,25 +11,7 @@
 
 using namespace nvcuda;
 
-#define OFFSET(row, col, ld) ((row) * (ld) + (col))
-
-#define ASYNC_COPY_TO_SHARED(dst, src, size)                                   \
-    asm volatile("cp.async.ca.shared.global [%0], [%1], " #size ";\n"          \
-                 :                                                             \
-                 : "r"(dst), "l"(src))
-
-#define COMMIT_ASYNC_GROUP() asm volatile("cp.async.commit_group;\n" ::)
-
 #define WAIT_ASYNC_GROUP() asm volatile("cp.async.wait_group 0;\n" ::)
-#define CP_ASYNC_WAIT_GROUP(n)                                                \
-    asm volatile("cp.async.wait_group %0;\n" ::"n"(n))
-
-#define HOST_DEVICE_INLINE __device__ __host__ inline
-HOST_DEVICE_INLINE
-int div_ceil(int a, int b)
-{
-    return (a % b != 0) ? (a / b + 1) : (a / b);
-}
 
 namespace playground
 {
@@ -108,13 +91,13 @@ __global__ void hgemm_v13_triple_buffered(const float16_t* __restrict__ a,
 
     {
         // buffer 0
-        ASYNC_COPY_TO_SHARED(load_a_smem_addr_0, &a[load_a_gmem_addr], 16);
-        ASYNC_COPY_TO_SHARED(load_a_smem_addr_1, &a[load_a_gmem_addr + K], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_0, &b[load_b_gmem_addr], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_1, &b[load_b_gmem_addr + N], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_2, &b[load_b_gmem_addr + 2 * N],
+        CP_ASYNC_CA(load_a_smem_addr_0, &a[load_a_gmem_addr], 16);
+        CP_ASYNC_CA(load_a_smem_addr_1, &a[load_a_gmem_addr + K], 16);
+        CP_ASYNC_CA(load_b_smem_addr_0, &b[load_b_gmem_addr], 16);
+        CP_ASYNC_CA(load_b_smem_addr_1, &b[load_b_gmem_addr + N], 16);
+        CP_ASYNC_CA(load_b_smem_addr_2, &b[load_b_gmem_addr + 2 * N],
                              16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_3, &b[load_b_gmem_addr + 3 * N],
+        CP_ASYNC_CA(load_b_smem_addr_3, &b[load_b_gmem_addr + 3 * N],
                              16);
 
 
@@ -122,26 +105,26 @@ __global__ void hgemm_v13_triple_buffered(const float16_t* __restrict__ a,
         load_b_gmem_addr += BK * N;
 
         // buffer1
-        ASYNC_COPY_TO_SHARED(load_a_smem_addr_0 +
+        CP_ASYNC_CA(load_a_smem_addr_0 +
                                  s_a_db_offset * (int) sizeof(float16_t),
                              &a[load_a_gmem_addr], 16);
-        ASYNC_COPY_TO_SHARED(load_a_smem_addr_1 +
+        CP_ASYNC_CA(load_a_smem_addr_1 +
                                  s_a_db_offset * (int) sizeof(float16_t),
                              &a[load_a_gmem_addr + K], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_0 +
+        CP_ASYNC_CA(load_b_smem_addr_0 +
                                  s_b_db_offset * (int) sizeof(float16_t),
                              &b[load_b_gmem_addr], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_1 +
+        CP_ASYNC_CA(load_b_smem_addr_1 +
                                  s_b_db_offset * (int) sizeof(float16_t),
                              &b[load_b_gmem_addr + N], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_2 +
+        CP_ASYNC_CA(load_b_smem_addr_2 +
                                  s_b_db_offset * (int) sizeof(float16_t),
                              &b[load_b_gmem_addr + 2 * N], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_3 +
+        CP_ASYNC_CA(load_b_smem_addr_3 +
                                  s_b_db_offset * (int) sizeof(float16_t),
                              &b[load_b_gmem_addr + 3 * N], 16);
 
-        COMMIT_ASYNC_GROUP();
+        CP_ASYNC_COMMIT_GROUP();
         CP_ASYNC_WAIT_GROUP(1);
 
         __syncthreads();
@@ -156,31 +139,31 @@ __global__ void hgemm_v13_triple_buffered(const float16_t* __restrict__ a,
         int smem_sel = ((bk + 1) % 3);
 
 
-        ASYNC_COPY_TO_SHARED(load_a_smem_addr_0 + smem_sel_next *
+        CP_ASYNC_CA(load_a_smem_addr_0 + smem_sel_next *
                                                       s_a_db_offset *
                                                       (int) sizeof(float16_t),
                              &a[load_a_gmem_addr], 16);
-        ASYNC_COPY_TO_SHARED(load_a_smem_addr_1 + smem_sel_next *
+        CP_ASYNC_CA(load_a_smem_addr_1 + smem_sel_next *
                                                       s_a_db_offset *
                                                       (int) sizeof(float16_t),
                              &a[load_a_gmem_addr + K], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_0 + smem_sel_next *
+        CP_ASYNC_CA(load_b_smem_addr_0 + smem_sel_next *
                                                       s_b_db_offset *
                                                       (int) sizeof(float16_t),
                              &b[load_b_gmem_addr], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_1 + smem_sel_next *
+        CP_ASYNC_CA(load_b_smem_addr_1 + smem_sel_next *
                                                       s_b_db_offset *
                                                       (int) sizeof(float16_t),
                              &b[load_b_gmem_addr + N], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_2 + smem_sel_next *
+        CP_ASYNC_CA(load_b_smem_addr_2 + smem_sel_next *
                                                       s_b_db_offset *
                                                       (int) sizeof(float16_t),
                              &b[load_b_gmem_addr + 2 * N], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_3 + smem_sel_next *
+        CP_ASYNC_CA(load_b_smem_addr_3 + smem_sel_next *
                                                       s_b_db_offset *
                                                       (int) sizeof(float16_t),
                              &b[load_b_gmem_addr + 3 * N], 16);
-        COMMIT_ASYNC_GROUP();
+        CP_ASYNC_COMMIT_GROUP();
         load_a_gmem_addr += BK;
         load_b_gmem_addr += BK * N;
         wmma::load_matrix_sync(frag_a[0][0],
@@ -451,27 +434,27 @@ __global__ void hgemm_v13_quad_buffered(const float16_t* __restrict__ a,
     // Preload 3 buffers
 #pragma unroll
     for (int buf = 0; buf < 3; buf++) {
-        ASYNC_COPY_TO_SHARED(load_a_smem_addr_0 +
+        CP_ASYNC_CA(load_a_smem_addr_0 +
                                  buf * s_a_db_offset * (int) sizeof(float16_t),
                              &a[load_a_gmem_addr], 16);
-        ASYNC_COPY_TO_SHARED(load_a_smem_addr_1 +
+        CP_ASYNC_CA(load_a_smem_addr_1 +
                                  buf * s_a_db_offset * (int) sizeof(float16_t),
                              &a[load_a_gmem_addr + K], 16);
 
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_0 +
+        CP_ASYNC_CA(load_b_smem_addr_0 +
                                  buf * s_b_db_offset * (int) sizeof(float16_t),
                              &b[load_b_gmem_addr], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_1 +
+        CP_ASYNC_CA(load_b_smem_addr_1 +
                                  buf * s_b_db_offset * (int) sizeof(float16_t),
                              &b[load_b_gmem_addr + N], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_2 +
+        CP_ASYNC_CA(load_b_smem_addr_2 +
                                  buf * s_b_db_offset * (int) sizeof(float16_t),
                              &b[load_b_gmem_addr + 2 * N], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_3 +
+        CP_ASYNC_CA(load_b_smem_addr_3 +
                                  buf * s_b_db_offset * (int) sizeof(float16_t),
                              &b[load_b_gmem_addr + 3 * N], 16);
 
-        COMMIT_ASYNC_GROUP();
+        CP_ASYNC_COMMIT_GROUP();
 
         load_a_gmem_addr += BK;
         load_b_gmem_addr += BK * N;
@@ -487,27 +470,27 @@ __global__ void hgemm_v13_quad_buffered(const float16_t* __restrict__ a,
         int smem_sel_next = bk & 3;
         int smem_sel = (bk + 1) & 3;
 
-        ASYNC_COPY_TO_SHARED(load_a_smem_addr_0 + smem_sel_next *
+        CP_ASYNC_CA(load_a_smem_addr_0 + smem_sel_next *
                                                       s_a_db_offset *
                                                       (int) sizeof(float16_t),
                              &a[load_a_gmem_addr], 16);
-        ASYNC_COPY_TO_SHARED(load_a_smem_addr_1 + smem_sel_next *
+        CP_ASYNC_CA(load_a_smem_addr_1 + smem_sel_next *
                                                       s_a_db_offset *
                                                       (int) sizeof(float16_t),
                              &a[load_a_gmem_addr + K], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_0 + smem_sel_next *
+        CP_ASYNC_CA(load_b_smem_addr_0 + smem_sel_next *
                                                       s_b_db_offset *
                                                       (int) sizeof(float16_t),
                              &b[load_b_gmem_addr], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_1 + smem_sel_next *
+        CP_ASYNC_CA(load_b_smem_addr_1 + smem_sel_next *
                                                       s_b_db_offset *
                                                       (int) sizeof(float16_t),
                              &b[load_b_gmem_addr + N], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_2 + smem_sel_next *
+        CP_ASYNC_CA(load_b_smem_addr_2 + smem_sel_next *
                                                       s_b_db_offset *
                                                       (int) sizeof(float16_t),
                              &b[load_b_gmem_addr + 2 * N], 16);
-        ASYNC_COPY_TO_SHARED(load_b_smem_addr_3 + smem_sel_next *
+        CP_ASYNC_CA(load_b_smem_addr_3 + smem_sel_next *
                                                       s_b_db_offset *
                                                       (int) sizeof(float16_t),
                              &b[load_b_gmem_addr + 3 * N], 16);
@@ -594,7 +577,7 @@ __global__ void hgemm_v13_quad_buffered(const float16_t* __restrict__ a,
                                frag_c[i][j]);
             }
         }
-        COMMIT_ASYNC_GROUP();
+        CP_ASYNC_COMMIT_GROUP();
         CP_ASYNC_WAIT_GROUP(2);
 
         __syncthreads();
