@@ -2,15 +2,13 @@
 #include "playground/matmul.hpp"
 #include "playground/system.hpp"
 
-
 #include <algorithm>
 #include <cstdlib>
+#include <cstring>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <mma.h>
 #include <utility>
-#include <cstring>
-
 
 namespace playground
 {
@@ -34,6 +32,7 @@ namespace playground
 #define WARPS_PER_BLOCK 8      // BLOCK_ROW_WARPS * BLOCK_COL_WARPS
 #define THREADS_PER_BLOCK 256  // WARP_SIZE * WARPS_PER_BLOCK
 
+// 表示在K维度（内积维度）上​​每次连续加载的元素数量​
 #define CHUNK_K 2  // 32 / MMA_K
 
 #define THREAD_COPY_BYTES 16
@@ -88,11 +87,28 @@ __global__ void hgemm_mma_stage_v2(const float16_t* __restrict__ A,
     // 单个流水线阶段的总行数
     constexpr size_t smem_stage_off = BLOCK_ROWS + BLOCK_COLS;
 
+    // 用于​​分块写入​​每个warp的计算结果,
+    // 表示当前warp在共享内存中结果存储区域的​​行起始指针​
+    // 共享内存布局（矩阵C部分）：
+    // ┌──────────────────┬──────────────────┐
+    // │                  │                  │
+    // │  Warp0 (0-63行)  │  Warp1 (0-63行)  │ ← warp0和warp1共享行空间
+    // │                  │                  │
+    // ├──────────────────┼──────────────────┤
+    // │                  │                  │
+    // │  Warp2 (64-127行)│  Warp3 (64-127行)│ ← 垂直分区（BLOCK_ROW_WARPS=2）
+    // │                  │                  │
+    // ├──────────────────┼──────────────────┤
+    // │  Warp4 (128-191行│  Warp5 (128-191行│
+    // │                  │                  │
+    // ├──────────────────┼──────────────────┤
+    // │  Warp6 (192-255行│  Warp7 (192-255行│
+    // └──────────────────┴──────────────────┘
     float16_t* smem_warp_tile_row_ptr =
         &smem[0][0] + (warp_id / BLOCK_ROW_WARPS) * C_SMEM_STRIDE * WARP_ROWS;
 
-    // smem_warp_stream_ptr指向当前Warp在共享内存中存储​​计算结果（矩阵C）的起始位置​​。后续操作会将Tensor
-    // Core计算的局部结果（存储在寄存器RC中）暂存到共享内存，最终通过向量化方式（如int4）批量写回全局内存。这种设计避免了直接写全局内存的随机访问，提升内存带宽利用率。
+    // 用于​​连续读取​​每个warp的计算结果（准备写回全局内存）,
+    // 表示当前warp在共享内存中结果存储区域的​​连续数据流起始指针​
     const float16_t* smem_warp_stream_ptr =
         &smem[0][0] + warp_id * MMA_M * 2 * C_SMEM_STRIDE;
 
@@ -112,9 +128,9 @@ __global__ void hgemm_mma_stage_v2(const float16_t* __restrict__ A,
     }
 
     const float16_t* A_warp_ptr = &A[block_tile_i * MMA_M * K] +
-                             BLOCK_ROWS / WARPS_PER_BLOCK * K * warp_id;
+                                  BLOCK_ROWS / WARPS_PER_BLOCK * K * warp_id;
     const float16_t* B_warp_ptr = &B[block_tile_j * MMA_N * K] +
-                             BLOCK_COLS / WARPS_PER_BLOCK * K * warp_id;
+                                  BLOCK_COLS / WARPS_PER_BLOCK * K * warp_id;
 
     constexpr size_t A_smem_iters =
         BLOCK_ROWS / (CHUNK_COPY_LINES_PER_WARP * WARPS_PER_BLOCK);
@@ -159,6 +175,7 @@ __global__ void hgemm_mma_stage_v2(const float16_t* __restrict__ A,
                  BLOCK_COLS / WARPS_PER_BLOCK * warp_id;
     B_lane_ptr = (int4*) (B_warp_ptr + (lane_id / CHUNK_COPY_LINE_LANES) * K) +
                  (lane_id % CHUNK_COPY_LINE_LANES);
+    // CHUNK_COPY_LINE_LANES 每行32个数据需要4个线程拷贝
     B_smem_idx += lane_id / CHUNK_COPY_LINE_LANES;
 
 #pragma unroll
@@ -328,6 +345,7 @@ __global__ void hgemm_mma_stage_v2(const float16_t* __restrict__ A,
                     B_smem_lane_addr);
     }
 
+// 这里开始计算
 #pragma unroll 16
     for (size_t tile_k = CHUNK_K * (K_STAGE - 1); tile_k < K_tiles;
          tile_k += CHUNK_K) {
@@ -403,8 +421,8 @@ __global__ void hgemm_mma_stage_v2(const float16_t* __restrict__ A,
 
             CP_ASYNC_CG(A_smem_lane_addr, A_lane_ptr, THREAD_COPY_BYTES);
 
-            A_lane_ptr =
-                (int4*) ((float16_t*) A_lane_ptr + CHUNK_COPY_LINES_PER_WARP * K);
+            A_lane_ptr = (int4*) ((float16_t*) A_lane_ptr +
+                                  CHUNK_COPY_LINES_PER_WARP * K);
             A_smem_idx += CHUNK_COPY_LINES_PER_WARP;
         }
 
@@ -427,8 +445,8 @@ __global__ void hgemm_mma_stage_v2(const float16_t* __restrict__ A,
 
             CP_ASYNC_CG(B_smem_lane_addr, B_lane_ptr, THREAD_COPY_BYTES);
 
-            B_lane_ptr =
-                (int4*) ((float16_t*) B_lane_ptr + CHUNK_COPY_LINES_PER_WARP * K);
+            B_lane_ptr = (int4*) ((float16_t*) B_lane_ptr +
+                                  CHUNK_COPY_LINES_PER_WARP * K);
             B_smem_idx += CHUNK_COPY_LINES_PER_WARP;
         }
 
@@ -448,8 +466,8 @@ __global__ void hgemm_mma_stage_v2(const float16_t* __restrict__ A,
 
             CP_ASYNC_CG(A_smem_lane_addr, A_lane_ptr, THREAD_COPY_BYTES);
 
-            A_lane_ptr =
-                (int4*) ((float16_t*) A_lane_ptr + CHUNK_COPY_LINES_PER_WARP * K);
+            A_lane_ptr = (int4*) ((float16_t*) A_lane_ptr +
+                                  CHUNK_COPY_LINES_PER_WARP * K);
             A_smem_idx += CHUNK_COPY_LINES_PER_WARP;
         }
 
@@ -466,8 +484,8 @@ __global__ void hgemm_mma_stage_v2(const float16_t* __restrict__ A,
 
             CP_ASYNC_CG(B_smem_lane_addr, B_lane_ptr, THREAD_COPY_BYTES);
 
-            B_lane_ptr =
-                (int4*) ((float16_t*) B_lane_ptr + CHUNK_COPY_LINES_PER_WARP * K);
+            B_lane_ptr = (int4*) ((float16_t*) B_lane_ptr +
+                                  CHUNK_COPY_LINES_PER_WARP * K);
             B_smem_idx += CHUNK_COPY_LINES_PER_WARP;
         }
 
@@ -768,9 +786,8 @@ PLAYGROUND_MATMUL_DEC(float16_t, 19, M, N, K, A, B, C)
     dim3 gridDim(BLOCK_STRIDE, div_ceil(M, BLOCK_ROWS),
                  div_ceil(N, BLOCK_COLS * BLOCK_STRIDE));
     const int MMA_M = 16, MMA_N = 8, MMA_K = 16;
-    cudaFuncSetAttribute(
-        hgemm_mma_stage_v2<MMA_M, MMA_N, MMA_K>,
-        cudaFuncAttributeMaxDynamicSharedMemorySize, 131072);
+    cudaFuncSetAttribute(hgemm_mma_stage_v2<MMA_M, MMA_N, MMA_K>,
+                         cudaFuncAttributeMaxDynamicSharedMemorySize, 131072);
     hgemm_mma_stage_v2<MMA_M, MMA_N, MMA_K>
         <<<gridDim, blockDim, sharedMemSize>>>(A, B, C, M, N, K);
     cudaError_t err = cudaGetLastError();
@@ -779,4 +796,4 @@ PLAYGROUND_MATMUL_DEC(float16_t, 19, M, N, K, A, B, C)
     }
 }
 
-}
+}  // namespace playground
