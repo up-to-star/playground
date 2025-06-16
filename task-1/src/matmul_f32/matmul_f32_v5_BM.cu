@@ -89,5 +89,9 @@ PLAYGROUND_MATMUL_DEC(float32_t, 5, M, N, K, A, B, C)
     dim3 blockDim(BN / TN, BM / TM);
     dim3 gridDim((N + BN - 1) / BN, (M + BM - 1) / BM);
     sgemm<float32_t><<<gridDim, blockDim>>>(A, B, C, M, N, K);
+    cudaError err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        printf("Kernel launch error: %s\n", cudaGetErrorString(err));
+    }
 }
 }

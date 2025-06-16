@@ -5,7 +5,7 @@
 
 namespace playground
 {
-template <typename DType, unsigned int BLOCK_SIZE, unsigned int STRIDE>
+template <typename DType, const int BLOCK_SIZE, const int STRIDE>
 __global__ void sgemmV0(const DType* A, const DType* B, DType* C, size_t M,
                         size_t N, size_t K) {
     size_t tx = threadIdx.x;

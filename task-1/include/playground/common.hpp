@@ -2,6 +2,8 @@
 #include <mma.h>
 
 #define WARP_SIZE 32
+
+#define INT4(value) (reinterpret_cast<int4*>((value))[0])
 #ifndef OFFSET
     #define OFFSET(row, col, ld) ((row) * (ld) + (col))
 #endif

@@ -61,8 +61,9 @@ __global__ void sgemmV7(const DType * __restrict__ A, const DType * __restrict__
         WRITE_FLOAT4(sb[0][load_b_smem_k][load_b_smem_n]) = t_b;
     }
 
+    const int BLOCKS = (K + BK - 1) / BK;
     #pragma unroll
-    for (int bk = 1; bk < (K + BK - 1) / BK; bk++) {
+    for (int bk = 1; bk < BLOCKS; bk++) {
         int smem_sel = (bk - 1) & 1;
         int smem_sel_next = bk & 1;
         int load_a_gmem_k = bk * BK + load_a_smem_k;  // global col of a
@@ -102,6 +103,24 @@ __global__ void sgemmV7(const DType * __restrict__ A, const DType * __restrict__
         __syncthreads();
     }
 
+    int smem_sel = (BLOCKS - 1) & 1;
+#pragma unroll
+    for (int k = 0; k < BK; k++) {
+        WRITE_FLOAT4(r_comp_a[0]) = READ_FLOAT4(sa[smem_sel][k][ty * TM / 2]);
+        WRITE_FLOAT4(r_comp_a[4]) =
+            READ_FLOAT4(sa[smem_sel][k][ty * TM / 2 + BM / 2]);
+        WRITE_FLOAT4(r_comp_b[0]) = READ_FLOAT4(sb[smem_sel][k][tx * TN / 2]);
+        WRITE_FLOAT4(r_comp_b[4]) =
+            READ_FLOAT4(sb[smem_sel][k][tx * TN / 2 + BN / 2]);
+#pragma unroll
+        for (int m = 0; m < TM; m++) {
+#pragma unroll
+            for (int n = 0; n < TN; n++) {
+                r_c[m][n] += r_comp_a[m] * r_comp_b[n];
+            }
+        }
+    }
+
     #pragma unroll
     for (int i = 0; i < TM / 2; i++) {
         int store_c_gmem_m = by * BM + ty * TM / 2 + i;
@@ -127,5 +146,9 @@ PLAYGROUND_MATMUL_DEC(float32_t, 7, M, N, K, A, B, C)
     dim3 blockDim(BN / TN, BM / TM);
     dim3 gridDim((N + BN - 1) / BN, (M + BM - 1) / BM);
     sgemmV7<float32_t><<<gridDim, blockDim>>>(A, B, C, M, N, K);
+    cudaError err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        printf("Kernel launch error: %s\n", cudaGetErrorString(err));
+    }
 }
 }
