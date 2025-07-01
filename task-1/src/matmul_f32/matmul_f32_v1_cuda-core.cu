@@ -13,5 +13,9 @@ PLAYGROUND_MATMUL_DEC(float32_t, 1, m, n, k, A, B, C)
     const float32_t Beta = 0.0F;
     cublasSgemm(s_getCublasHandle(), CUBLAS_OP_N, CUBLAS_OP_N, n, m, k, &Alpha,
                 B, n, A, k, &Beta, C, n);
+    cudaError err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        printf("Kernel launch error: %s\n", cudaGetErrorString(err));
+    }
 }
 }  // namespace playground

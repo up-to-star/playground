@@ -17,7 +17,6 @@
 #define CP_ASYNC_WAIT_ALL() asm volatile("cp.async.wait_all;\n" ::)
 #define CP_ASYNC_WAIT_GROUP(n)                                                \
     asm volatile("cp.async.wait_group %0;\n" ::"n"(n))
-
 // ca(cache all, L1 + L2): support 4, 8, 16 bytes, cg(cache global, L2): only
 // support 16 bytes.
 #define CP_ASYNC_CA(dst, src, bytes)                                          \

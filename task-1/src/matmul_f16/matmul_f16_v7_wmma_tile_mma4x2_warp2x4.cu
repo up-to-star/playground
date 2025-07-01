@@ -1,39 +1,39 @@
 #include "playground/matmul.hpp"
 #include "playground/system.hpp"
 
+#include <cfloat>
 #include <cuda.h>
 #include <cuda_fp16.h>
 #include <cuda_runtime.h>
-#include <cfloat>
 #include <mma.h>
-
 
 using namespace nvcuda;
 
 #define WARP_SIZE 32
 
 #define div_ceil(n, m) (((n) + (m) - 1) / (m))
-#define READ128BITS(pointer)                                                   \
+#define READ128BITS(pointer)                                                  \
     (*reinterpret_cast<const float4*>(std::addressof(pointer)))
-#define WRITE128BITS(pointer)                                                  \
+#define WRITE128BITS(pointer)                                                 \
     (*reinterpret_cast<float4*>(std::addressof(pointer)))
-
 
 namespace playground
 {
 
 template <typename DType, const int WMMA_M = 16, const int WMMA_N = 16,
           const int WMMA_K = 16, const int WMMA_TILE_M = 4,
-          const int WMMA_TILE_N = 2, const int WARP_TILE_M = 2, const int WARP_TILE_N = 4>
+          const int WMMA_TILE_N = 2, const int WARP_TILE_M = 2,
+          const int WARP_TILE_N = 4>
 __global__ void hgemm_wmma_mma4x2_warp2x4(const DType* __restrict__ A,
                                           const DType* __restrict__ B,
-                                          DType* __restrict__ C, const size_t M,
-                                          const size_t N, const size_t K)
+                                          DType* __restrict__ C,
+                                          const size_t M, const size_t N,
+                                          const size_t K)
 {
     const int bx = blockIdx.x, by = blockIdx.y;
     const int NUM_K_TILES = div_ceil(K, WMMA_K);
-    constexpr int BM = WMMA_M * WMMA_TILE_M * WARP_TILE_M;
-    constexpr int BN = WMMA_N * WMMA_TILE_N * WARP_TILE_N;
+    constexpr int BM = WMMA_M * WMMA_TILE_M * WARP_TILE_M; // 128
+    constexpr int BN = WMMA_N * WMMA_TILE_N * WARP_TILE_N; // 128
     constexpr int BK = WMMA_K;
 
     __shared__ DType sa[BM][BK], sb[BK][BN];
@@ -53,7 +53,8 @@ __global__ void hgemm_wmma_mma4x2_warp2x4(const DType* __restrict__ A,
     // 计算对应的全局索引
     const int load_a_gmem_m = by * BM + load_a_smem_m;
     const int load_b_gmem_n = bx * BN + load_b_smem_n;
-    if (load_a_gmem_m >= static_cast<int>(M) || load_b_gmem_n >= static_cast<int>(N)) {
+    if (load_a_gmem_m >= static_cast<int>(M) ||
+        load_b_gmem_n >= static_cast<int>(N)) {
         return;
     }
 
@@ -73,7 +74,6 @@ __global__ void hgemm_wmma_mma4x2_warp2x4(const DType* __restrict__ A,
     wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, DType,
                    wmma::row_major>
         b_frag[WARP_TILE_N];
-    
 
 #pragma unroll
     for (size_t k = 0; k < static_cast<size_t>(NUM_K_TILES); k++) {
@@ -106,7 +106,8 @@ __global__ void hgemm_wmma_mma4x2_warp2x4(const DType* __restrict__ A,
         for (size_t i = 0; i < WARP_TILE_M; i++) {
 #pragma unroll
             for (size_t j = 0; j < WARP_TILE_N; j++) {
-                wmma::mma_sync(c_frag[i][j], a_frag[i], b_frag[j], c_frag[i][j]);
+                wmma::mma_sync(c_frag[i][j], a_frag[i], b_frag[j],
+                               c_frag[i][j]);
             }
         }
         __syncthreads();
@@ -120,7 +121,8 @@ __global__ void hgemm_wmma_mma4x2_warp2x4(const DType* __restrict__ A,
                 by * BM + warp_m * WARP_TILE_M * WMMA_M + i * WMMA_M;
             const int store_c_gmem_n =
                 bx * BN + warp_n * WARP_TILE_N * WMMA_N + j * WMMA_N;
-            wmma::store_matrix_sync(C + store_c_gmem_m * N + store_c_gmem_n, c_frag[i][j], N, wmma::mem_row_major);
+            wmma::store_matrix_sync(C + store_c_gmem_m * N + store_c_gmem_n,
+                                    c_frag[i][j], N, wmma::mem_row_major);
         }
     }
 }
@@ -131,6 +133,7 @@ PLAYGROUND_MATMUL_DEC(float16_t, 7, M, N, K, A, B, C)
 
     dim3 blockDim(32, 8);
     dim3 gridDim(div_ceil(N, BN), div_ceil(M, BM));
-    hgemm_wmma_mma4x2_warp2x4<float16_t><<<gridDim, blockDim>>>(A, B, C, M, N, K);
+    hgemm_wmma_mma4x2_warp2x4<float16_t>
+        <<<gridDim, blockDim>>>(A, B, C, M, N, K);
 }
-}
+}  // namespace playground

@@ -209,7 +209,7 @@ PLAYGROUND_MATMUL_DEC(float16_t, 10, M, N, K, A, B, C)
     constexpr int WMMA_M = 16, WMMA_N = 16, WMMA_K = 16;
     constexpr int WMMA_TILE_M = 4, WMMA_TILE_N = 2;
     constexpr int WARP_TILE_M = 2, WARP_TILE_N = 4;
-    constexpr int OFFSET = 8;
+    constexpr int OFFSET = 0;
     // constexpr int OFFSET = (64 - (BK % 64)) % 64;
     dim3 blockDim(32, 8);
     dim3 gridDim(div_ceil(N, BN), div_ceil(M, BM));
