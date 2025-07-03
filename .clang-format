@@ -1,41 +1,41 @@
-Language:     Cpp
-BasedOnStyle: Microsoft
+Language: Cpp
+BasedOnStyle: Google
 
-AccessModifierOffset:   -4
-IndentWidth:            4
-UseTab:                 Never
-TabWidth:               4
+AccessModifierOffset: -4
+IndentWidth: 4
+UseTab: Never
+TabWidth: 4
 IndentPPDirectives: BeforeHash
 
-BreakBeforeBraces:       Custom
+BreakBeforeBraces: Custom
 BraceWrapping:
-  AfterClass:            true
+  AfterClass: true
   AfterControlStatement: false
-  AfterEnum:             true
-  AfterFunction:         true
-  AfterNamespace:        true
-  AfterStruct:           true
-  AfterUnion:            true
-  BeforeCatch:           false
-  BeforeElse:            false
-  SplitEmptyFunction:    true
-  SplitEmptyRecord:      true
-  SplitEmptyNamespace:   true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: false
+  BeforeElse: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
 
-PointerAlignment:        Left
+PointerAlignment: Left
 
-SpaceAfterCStyleCast:         true
+SpaceAfterCStyleCast: true
 SpacesBeforeTrailingComments: 2
-SpaceBeforeParens:            ControlStatements
+SpaceBeforeParens: ControlStatements
 
-AlignAfterOpenBracket:        Align
-AlignConsecutiveAssignments:  false
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
-AlignTrailingComments:        true
-AlignOperands:                true
+AlignTrailingComments: true
+AlignOperands: true
 
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
-ConstructorInitializerIndentWidth:              4
+ConstructorInitializerIndentWidth: 4
 
 AlwaysBreakTemplateDeclarations: Yes
 

@@ -1,13 +1,14 @@
-#include "playground/common.hpp"
-#include "playground/matmul.hpp"
-#include "playground/system.hpp"
-
-#include <cstddef>
-#include <cstdint>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <mma.h>
 #include <sys/types.h>
+
+#include <cstddef>
+#include <cstdint>
+
+#include "playground/common.hpp"
+#include "playground/matmul.hpp"
+#include "playground/system.hpp"
 
 namespace playground
 {
@@ -242,7 +243,6 @@ __global__ void hgemm_mma_4stage_v3(const float16_t* __restrict__ A,
                           RA[reg_load_idx][m][1], RA[reg_load_idx][m][2],
                           RA[reg_load_idx][m][3], RB[reg_load_idx][n_][0],
                           RB[reg_load_idx][n_][1], RC[m][n_][0], RC[m][n_][1]);
-                
             }
         }
 
@@ -490,11 +490,8 @@ __global__ void hgemm_mma_4stage_v3(const float16_t* __restrict__ A,
         int col2 = col1 ^ ((row & ((1 << 4) - 1)) << 3);
         INT4(C + OFFSET(by * BM + row, bx * BN + col1, N)) =
             INT4(sc + OFFSET(row, col2, BN));
-        
     }
-    
 }
-
 
 PLAYGROUND_MATMUL_DEC(float16_t, 20, M, N, K, A, B, C)
 {
